@@ -40,3 +40,12 @@ a {
     color-scheme: dark;
   }
 }
+
+.airbnb-calendar .ant-picker-input {
+  display: none !important;
+}
+
+.airbnb-calendar .ant-picker-panel-container {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
