@@ -24,7 +24,7 @@ import { headerReducer, initialState } from "app/redux/reducer/store";
 
 const { Header: AntHeader } = Layout;
 
-const Header = () => {
+const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
 
   useEffect(() => {
@@ -120,12 +120,9 @@ const Header = () => {
       return;
     }
 
-    const params = {
-      maViTri: state.selectedLocation.id,
-      checkIn: dayjs(state.dates[0]).format("YYYY-MM-DD"),
-      checkOut: dayjs(state.dates[1]).format("YYYY-MM-DD"),
-      guests: { ...state.guestCounts },
-    };
+    if (onSearch) {
+      onSearch(state.selectedLocation.id); // Gửi ID về page.js
+    }
 
     try {
       const res = await getRoomsByLocation(state.selectedLocation.id);
