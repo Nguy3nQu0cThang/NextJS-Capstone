@@ -1,40 +1,49 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getAllLocations } from "app/services/bookingService";
+import { useRouter } from "next/navigation"; // viết thêm API service getAllRooms
 import { List, Card, Pagination } from "antd";
-const ITEMS_PER_PAGE = 8; // số lượng địa điểm mỗi trang
+import { getAllRooms } from "app/services/roomService";
 
-const LocationList = () => {
-  const [locations, setLocations] = useState([]);
+const ITEMS_PER_PAGE = 8;
+
+const LocationList = ({ selectedLocationId }) => {
+  const [allRooms, setAllRooms] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchRooms = async () => {
       try {
-        const res = await getAllLocations();
-        console.log("DATA RESPONSE:", res);
-        setLocations(res?.content || []); // <-- dùng res.content
+        const res = await getAllRooms();
+        console.log("DATA ROOMS RESPONSE:", res.data.content); // <-- log đúng data
+        setAllRooms(res.data.content || []);
+        setRooms(res.data.content || []);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách vị trí:", error);
+        console.error("Lỗi khi lấy danh sách phòng thuê:", error);
       }
     };
-  
-    fetchLocations();
+    fetchRooms();
   }, []);
+  
+  useEffect(() => {
+    if (selectedLocationId) {
+      // lọc những phòng có maViTri trùng với selectedLocationId
+      const filtered = allRooms.filter((room) => room.maViTri === selectedLocationId);
+      setRooms(filtered);
+      setCurrentPage(1);
+    } else {
+      setRooms(allRooms);
+    }
+  }, [selectedLocationId, allRooms]);
 
   const handleClick = (id) => {
-    router.push(`/rooms/${id}`);
+    router.push(`/rooms/${id}`); 
   };
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentLocations = locations.slice(indexOfFirstItem, indexOfLastItem);
-
-  const totalPages = Math.ceil(locations.length / ITEMS_PER_PAGE);
-
-  
+  const currentRooms = rooms.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -48,34 +57,33 @@ const LocationList = () => {
           xl: 4,
           xxl: 4,
         }}
-        dataSource={currentLocations}
-        renderItem={(location) => (
-          <List.Item>
+        dataSource={currentRooms}
+        renderItem={(room) => (
+          <List.Item key={room.id}>
             <Card
               hoverable
               cover={
                 <img
-                  alt={location.tenViTri}
-                  src={location.hinhAnh}
+                  alt={room.tenPhong}
+                  src={room.hinhAnh}
                   style={{ height: "200px", objectFit: "cover" }}
                 />
               }
-              onClick={() => handleClick(location.id)}
+              onClick={() => handleClick(room.id)}
             >
               <Card.Meta
-                title={location.tenViTri}
-                description={location.tinhThanh}
+                title={room.tenPhong}
+                description={`Giá: ${room.giaTien} VNĐ`}
               />
             </Card>
           </List.Item>
         )}
       />
 
-      {/* Pagination */}
       <div className="flex justify-center mt-8">
         <Pagination
           current={currentPage}
-          total={locations.length}
+          total={rooms.length}
           pageSize={ITEMS_PER_PAGE}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
