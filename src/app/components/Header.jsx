@@ -1,31 +1,39 @@
 "use client";
 
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import locale from "antd/es/date-picker/locale/vi_VN";
-import {
-  Layout,
-  Menu,
-  Button,
-  Space,
-  Dropdown,
-  DatePicker,
-} from "antd";
-import {
-  GlobalOutlined,
-  MenuOutlined,
-  UserOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { Layout, Button, Dropdown, DatePicker, message } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import Image from "next/image";
-import { getListLocations, getRoomsByLocation } from "app/services/bookingService";
+import {
+  getListLocations,
+  getRoomsByLocation,
+} from "app/services/bookingService";
 import { headerReducer, initialState } from "app/redux/reducer/store";
+import UserMenu from "./UserMenu/UserMenu";
+import AuthModal from "./auth/AuthModal";
 
 const { Header: AntHeader } = Layout;
 
 const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("");
+
+  const showModal = (mode) => {
+    setModalMode(mode);
+    setIsModalOpen(true);
+    console.log("Mở modal với mode:", mode);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    console.log("Đóng modal qua handleCancel");
+  };
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -38,6 +46,23 @@ const Header = ({ onSearch }) => {
     };
 
     fetchLocations();
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      try {
+        const user = JSON.parse(atob(token.split(".")[1]));
+        setUserName(
+          user[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+          ] || ""
+        );
+        setIsLoggedIn(true);
+      } catch (error) {
+        console.error("Lỗi giải mã token:", error);
+      }
+    }
   }, []);
 
   const updateGuest = (type, delta) => {
@@ -92,7 +117,9 @@ const Header = ({ onSearch }) => {
 
   const dateLabel =
     state.dates?.length === 2
-      ? `${dayjs(state.dates[0]).format("D [thg] M")} - ${dayjs(state.dates[1]).format("D [thg] M")}`
+      ? `${dayjs(state.dates[0]).format("D [thg] M")} - ${dayjs(
+          state.dates[1]
+        ).format("D [thg] M")}`
       : "Thời gian";
 
   const locationMenu = {
@@ -103,20 +130,9 @@ const Header = ({ onSearch }) => {
     })),
   };
 
-  const userMenu = (
-    <Menu
-      items={[
-        { label: "Đăng ký", key: "signup" },
-        { label: "Đăng nhập", key: "login" },
-        { type: "divider" },
-        { label: "Trợ giúp", key: "help" },
-      ]}
-    />
-  );
-
   const handleSearch = async () => {
     if (!state.selectedLocation || state.dates.length !== 2) {
-      alert("Vui lòng chọn đầy đủ địa điểm và ngày ở!");
+      message.warning("Vui lòng chọn đầy đủ địa điểm và ngày ở!");
       return;
     }
 
@@ -129,6 +145,7 @@ const Header = ({ onSearch }) => {
       console.log("Kết quả phòng:", res.data.content);
     } catch (err) {
       console.error("Lỗi khi tìm phòng:", err);
+      message.error("Không thể tải danh sách phòng!");
     }
   };
 
@@ -136,7 +153,6 @@ const Header = ({ onSearch }) => {
     <AntHeader
       style={{
         display: "flex",
-        justifyContent: "space-between",
         alignItems: "center",
         background: "#fff",
         padding: "0 40px",
@@ -144,20 +160,26 @@ const Header = ({ onSearch }) => {
         position: "sticky",
         top: 0,
         zIndex: 1000,
-        height: "64px",
+        height: "80px",
+        width: "100%",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ width: "200px", display: "flex", alignItems: "center" }}>
         <Image src="/airbnb-logo.png" alt="Airbnb" width={100} height={32} />
       </div>
 
-      <Space
-        size="middle"
+      <div
         style={{
+          position: "absolute",
+          left: "50%",
+          transform: "translateX(-50%)",
           border: "1px solid #ddd",
           borderRadius: "999px",
-          padding: "6px 16px",
+          padding: "0px 20px",
           boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
         }}
       >
         <Dropdown menu={locationMenu} trigger={["click"]}>
@@ -168,31 +190,41 @@ const Header = ({ onSearch }) => {
           open={state.openDate}
           onOpenChange={() => dispatch({ type: "TOGGLE_DATE" })}
           dropdownRender={() => (
-            <div style={{ position: "relative", padding: 8 }}>
-              <Button
-                shape="circle"
-                size="small"
-                onClick={() => dispatch({ type: "TOGGLE_DATE" })}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  zIndex: 10,
-                  backgroundColor: "#f5f5f5",
-                  border: "none",
-                }}
-              >
-                ✕
-              </Button>
-              <DatePicker.RangePicker
-                locale={locale}
-                format="DD/MM/YYYY"
-                value={state.dates}
-                onCalendarChange={(val) => dispatch({ type: "SET_DATES", payload: val })}
-                style={{ width: "100%" }}
-                allowClear={false}
-                open={true}
-              />
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              }}
+            >
+              <div style={{ position: "relative", padding: 8 }}>
+                <Button
+                  shape="circle"
+                  size="small"
+                  onClick={() => dispatch({ type: "TOGGLE_DATE" })}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    zIndex: 10,
+                    backgroundColor: "#f5f5f5",
+                    border: "none",
+                  }}
+                >
+                  ✕
+                </Button>
+                <DatePicker.RangePicker
+                  locale={locale}
+                  format="DD/MM/YYYY"
+                  value={state.dates}
+                  onCalendarChange={(val) =>
+                    dispatch({ type: "SET_DATES", payload: val })
+                  }
+                  style={{ width: "100%" }}
+                  allowClear={false}
+                  open={true}
+                />
+              </div>
             </div>
           )}
         >
@@ -202,7 +234,17 @@ const Header = ({ onSearch }) => {
         <Dropdown
           open={state.guestOpen}
           onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
-          dropdownRender={() => guestDropdown}
+          dropdownRender={() => (
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              }}
+            >
+              {guestDropdown}
+            </div>
+          )}
         >
           <span style={{ cursor: "pointer" }}>{guestLabel()}</span>
         </Dropdown>
@@ -213,17 +255,25 @@ const Header = ({ onSearch }) => {
           style={{ backgroundColor: "#ff385c", borderColor: "#ff385c" }}
           onClick={handleSearch}
         />
-      </Space>
+      </div>
 
-      <Space size="middle">
-        <span style={{ cursor: "pointer", fontSize: "14px" }}>Booking</span>
-        <GlobalOutlined style={{ fontSize: "16px", cursor: "pointer" }} />
-        <Dropdown menu={userMenu} trigger={["click"]}>
-          <Button icon={<MenuOutlined />} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <UserOutlined />
-          </Button>
-        </Dropdown>
-      </Space>
+      <UserMenu
+        isLoggedIn={isLoggedIn}
+        userName={userName}
+        setIsLoggedIn={setIsLoggedIn}
+        setUserName={setUserName}
+        showModal={showModal}
+      />
+
+      <AuthModal
+        isModalOpen={isModalOpen}
+        modalMode={modalMode}
+        handleCancel={handleCancel}
+        setIsModalOpen={setIsModalOpen}
+        setModalMode={setModalMode}
+        setIsLoggedIn={setIsLoggedIn}
+        setUserName={setUserName}
+      />
     </AntHeader>
   );
 };
