@@ -17,7 +17,7 @@ import AuthModal from "./auth/AuthModal";
 
 const { Header: AntHeader } = Layout;
 
-const Header = () => {
+const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
@@ -134,6 +134,10 @@ const Header = () => {
     if (!state.selectedLocation || state.dates.length !== 2) {
       message.warning("Vui lòng chọn đầy đủ địa điểm và ngày ở!");
       return;
+    }
+
+    if (onSearch) {
+      onSearch(state.selectedLocation.id); // Gửi ID về page.js
     }
 
     try {
