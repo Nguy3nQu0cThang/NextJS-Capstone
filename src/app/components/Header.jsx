@@ -165,7 +165,13 @@ const Header = ({ onSearch }) => {
       }}
     >
       <div style={{ width: "200px", display: "flex", alignItems: "center" }}>
-        <Image src="/airbnb-logo.png" alt="Airbnb" width={100} height={32} />
+        <Image
+          src="/Airbnb-Logo.wine.png"
+          alt="Airbnb"
+          width={200}
+          height={50}
+          style={{ maxWidth: "100%", height: "auto" }}
+        />
       </div>
 
       <div
