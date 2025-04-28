@@ -3,6 +3,7 @@
 import React from "react";
 import { Dropdown, Button, Space } from "antd";
 import { GlobalOutlined, MenuOutlined, UserOutlined } from "@ant-design/icons";
+import { useRouter } from "next/navigation";
 
 const UserMenu = ({
   isLoggedIn,
@@ -11,6 +12,7 @@ const UserMenu = ({
   setUserName,
   showModal,
 }) => {
+  const router = useRouter()
   const handleMenuClick = ({ key }) => {
     if (key === "signup") {
       showModal("signup");
@@ -21,6 +23,7 @@ const UserMenu = ({
       setIsLoggedIn(false);
       setUserName("");
     } else if (key === "account") {
+      router.push("/user/profile")
       console.log("Điều hướng đến trang thông tin tài khoản");
     }
   };

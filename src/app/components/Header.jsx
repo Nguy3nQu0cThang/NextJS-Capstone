@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import locale from "antd/es/date-picker/locale/vi_VN";
@@ -13,27 +13,25 @@ import {
 } from "app/services/bookingService";
 import { headerReducer, initialState } from "app/redux/reducer/store";
 import UserMenu from "./UserMenu/UserMenu";
+import { useAuth } from "app/context/AuthContext";
 import AuthModal from "./auth/AuthModal";
 
 const { Header: AntHeader } = Layout;
 
 const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("");
-
-  const showModal = (mode) => {
-    setModalMode(mode);
-    setIsModalOpen(true);
-    console.log("Mở modal với mode:", mode);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-    console.log("Đóng modal qua handleCancel");
-  };
+  const {
+    isLoggedIn,
+    setIsLoggedIn,
+    userName,
+    setUserName,
+    showModal,
+    isModalOpen,
+    modalMode,
+    setIsModalOpen,
+    setModalMode,
+    handleCancel,
+  } = useAuth();
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -46,23 +44,6 @@ const Header = ({ onSearch }) => {
     };
 
     fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      try {
-        const user = JSON.parse(atob(token.split(".")[1]));
-        setUserName(
-          user[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-          ] || ""
-        );
-        setIsLoggedIn(true);
-      } catch (error) {
-        console.error("Lỗi giải mã token:", error);
-      }
-    }
   }, []);
 
   const updateGuest = (type, delta) => {
@@ -137,7 +118,7 @@ const Header = ({ onSearch }) => {
     }
 
     if (onSearch) {
-      onSearch(state.selectedLocation.id); // Gửi ID về page.js
+      onSearch(state.selectedLocation.id);
     }
 
     try {

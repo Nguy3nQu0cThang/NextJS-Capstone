@@ -23,7 +23,7 @@ const Login = ({ onSuccess }) => {
 
       console.log("Đăng nhập thành công, response:", res.data);
       const token = res.data.content.accessToken;
-      localStorage.setItem("authToken", token);
+      localStorage.setItem("accessToken", token);
       const user = JSON.parse(atob(token.split(".")[1]));
       const username =
         user[
