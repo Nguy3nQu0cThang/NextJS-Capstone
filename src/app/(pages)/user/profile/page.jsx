@@ -1,11 +1,11 @@
 "use client";
 
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Avatar, Descriptions, Alert, Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../context/AuthContext";
+import { http } from "app/utils/setting";
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -16,7 +16,7 @@ const UserProfile = () => {
 
   const getProfileAPI = async () => {
     const token = localStorage.getItem("accessToken");
-    console.log("Token:", token);
+    console.log("Token:", token); // Debug token
     if (!token) {
       setError("Vui lòng đăng nhập để xem hồ sơ.");
       setLoading(false);
@@ -26,18 +26,8 @@ const UserProfile = () => {
     }
     try {
       setLoading(true);
-      const res = await axios.post(
-        "https://apistore.cybersoft.edu.vn/api/Users/getProfile",
-        {},
-        {
-          headers: {
-            Authorization: token,
-            TokenCybersoft:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0",
-          },
-        }
-      );
-      console.log("API Response:", res.data);
+      const res = await http.post("/api/Users/getProfile", {}); // Sử dụng baseURL
+      console.log("API Response:", res.data); // Debug response
       if (res.data.statusCode === 200) {
         if (res.data.content) {
           setProfile(res.data.content);
@@ -49,7 +39,7 @@ const UserProfile = () => {
       }
       setLoading(false);
     } catch (err) {
-      console.error("API Error:", err.response?.status, err.response?.data);
+      console.error("API Error:", err.response?.status, err.response?.data); // Debug lỗi
       const status = err.response?.status;
       if (status === 401) {
         setError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
@@ -96,7 +86,7 @@ const UserProfile = () => {
     );
   }
 
-  console.log("profile:", profile);
+  console.log("profile:", profile); // Debug profile
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>

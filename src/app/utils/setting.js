@@ -1,7 +1,5 @@
 import axios from "axios";
-import { createBrowserHistory } from "history";
 
-export const navigateHistory = createBrowserHistory();
 export const TOKEN = "accessToken";
 export const USER_LOGIN = "userLogin";
 
@@ -95,35 +93,14 @@ http.interceptors.response.use(
               refreshErr.response?.data
             );
             localStorage.removeItem(TOKEN);
-            navigateHistory.push("/");
             return Promise.reject(refreshErr);
           }
         }
       }
     }
 
-    switch (err?.response?.status) {
-      case 400:
-        console.error("Bad Request:", err.response?.data);
-        navigateHistory.push("/");
-        break;
-      case 404:
-        console.error("Not Found:", err.response?.data);
-        navigateHistory.push("/");
-        break;
-      case 401:
-        localStorage.removeItem(TOKEN);
-        navigateHistory.push("/");
-        break;
-      case 403:
-        console.error("Forbidden:", err.response?.data);
-        navigateHistory.push("/");
-        break;
-      case 500:
-        console.error("Server Error:", err.response?.data);
-        navigateHistory.push("/");
-        break;
-    }
+    // Để component xử lý lỗi
+    console.error("API Error:", err.response?.status, err.response?.data);
     return Promise.reject(err);
   }
 );
