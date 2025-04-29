@@ -11,3 +11,20 @@ export const getAllRooms = () => {
     },
   });
 };
+
+export const getRoomDetail = (id) => {
+  return axios.get(`${BASE_URL}/phong-thue/${id}`, {
+    headers: {
+      TokenCybersoft: TOKEN_CYBERSOFT,
+    },
+  });
+};
+
+export const getRoomReviews = (roomId) => {
+  return axios.get(`${BASE_URL}/binh-luan/lay-binh-luan-theo-phong`, {
+    params: { maPhong: roomId },
+    headers: {
+      TokenCybersoft: TOKEN_CYBERSOFT,
+    },
+  });
+};

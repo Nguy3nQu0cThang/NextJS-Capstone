@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // viết thêm API service getAllRooms
+import { useRouter } from "next/navigation"; 
 import { List, Card, Pagination } from "antd";
 import { getAllRooms } from "app/services/roomService";
 
@@ -16,7 +16,7 @@ const LocationList = ({ selectedLocationId }) => {
     const fetchRooms = async () => {
       try {
         const res = await getAllRooms();
-        console.log("DATA ROOMS RESPONSE:", res.data.content); // <-- log đúng data
+        console.log("DATA ROOMS RESPONSE:", res.data.content); 
         setAllRooms(res.data.content || []);
         setRooms(res.data.content || []);
       } catch (error) {
@@ -28,7 +28,6 @@ const LocationList = ({ selectedLocationId }) => {
   
   useEffect(() => {
     if (selectedLocationId) {
-      // lọc những phòng có maViTri trùng với selectedLocationId
       const filtered = allRooms.filter((room) => room.maViTri === selectedLocationId);
       setRooms(filtered);
       setCurrentPage(1);
