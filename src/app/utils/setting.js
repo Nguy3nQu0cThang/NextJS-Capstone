@@ -14,6 +14,7 @@ export function setCookie(name, value, days) {
   }
   document.cookie = name + "=" + (value || "") + expires + "; path=/";
 }
+
 export function getCookie(name) {
   var nameEQ = name + "=";
   var ca = document.cookie.split(";");
@@ -24,11 +25,12 @@ export function getCookie(name) {
   }
   return null;
 }
+
 export function deleteCookie(name) {
   document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 }
 
-export const DOMAIN = "https://movienew.cybersoft.edu.vn";
+export const DOMAIN = "https://apistore.cybersoft.edu.vn";
 export const TOKEN_CYBERSOFT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0";
 
@@ -44,7 +46,7 @@ http.interceptors.request.use((config) => {
     TokenCybersoft: TOKEN_CYBERSOFT,
   };
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = token; // Giữ token thô
   }
   return config;
 });
@@ -62,19 +64,39 @@ http.interceptors.response.use(
 
         if (isExpired) {
           try {
-            const response = await axios({
-              url: "https://apistore.cybersoft.edu.vn/api/Users/RefeshToken",
-              method: "POST",
-              headers: {
-                Authorization: token,
-                TokenCybersoft: TOKEN_CYBERSOFT,
-              },
-            });
-            localStorage.setItem(TOKEN, response.data.content.accessToken);
-            navigateHistory.push(window.location.pathname);
-          } catch (err) {
-            alert(err);
-            navigateHistory.push("/login");
+            const response = await axios.post(
+              "https://apistore.cybersoft.edu.vn/api/Users/RefeshToken",
+              {},
+              {
+                headers: {
+                  Authorization: token,
+                  TokenCybersoft: TOKEN_CYBERSOFT,
+                },
+              }
+            );
+            console.log("RefreshToken Response:", response.data);
+            if (
+              response.data.statusCode === 200 &&
+              response.data.content?.accessToken
+            ) {
+              localStorage.setItem(TOKEN, response.data.content.accessToken);
+              // Retry request gốc
+              const originalRequest = err.config;
+              originalRequest.headers.Authorization =
+                response.data.content.accessToken;
+              return axios(originalRequest);
+            } else {
+              throw new Error("Không thể làm mới token.");
+            }
+          } catch (refreshErr) {
+            console.error(
+              "RefreshToken Error:",
+              refreshErr.response?.status,
+              refreshErr.response?.data
+            );
+            localStorage.removeItem(TOKEN);
+            navigateHistory.push("/");
+            return Promise.reject(refreshErr);
           }
         }
       }
@@ -82,35 +104,24 @@ http.interceptors.response.use(
 
     switch (err?.response?.status) {
       case 400:
-        {
-          alert("sai tham số");
-
-          navigateHistory.push("/");
-        }
+        console.error("Bad Request:", err.response?.data);
+        navigateHistory.push("/");
         break;
-
       case 404:
-        {
-          alert("đường dẫn không tồn tại");
-          navigateHistory.push("/");
-        }
+        console.error("Not Found:", err.response?.data);
+        navigateHistory.push("/");
         break;
       case 401:
-        {
-          navigateHistory.push("/login");
-        }
+        localStorage.removeItem(TOKEN);
+        navigateHistory.push("/");
         break;
       case 403:
-        {
-          alert("Yêu cầu quản trị viên mới có thể vào được");
-          navigateHistory.push("/");
-        }
+        console.error("Forbidden:", err.response?.data);
+        navigateHistory.push("/");
         break;
       case 500:
-        {
-          alert("Lỗi hệ thống");
-          navigateHistory.push("/");
-        }
+        console.error("Server Error:", err.response?.data);
+        navigateHistory.push("/");
         break;
     }
     return Promise.reject(err);
