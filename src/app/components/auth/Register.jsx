@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Form, Input, Button, Select, message } from "antd";
-import axios from "axios";
+import { http } from "app/utils/setting";
 
 const { Option } = Select;
 
@@ -12,19 +12,12 @@ const Register = ({ onSuccess }) => {
   const onFinish = async (values) => {
     try {
       const { confirmPassword, ...userData } = values;
+      console.log("Bắt đầu đăng ký với dữ liệu:", userData);
 
-      const res = await axios.post(
-        "https://apistore.cybersoft.edu.vn/api/Users/signup",
-        userData,
-        {
-          headers: {
-            TokenCybersoft:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0",
-          },
-        }
-      );
+      const res = await http.post("/api/Users/signup", userData);
+      console.log("Đăng ký thành công, response:", res.data);
+
       message.success("Đăng ký thành công!");
-      console.log("Đăng ký thành công:", res.data);
       form.resetFields();
       console.log("Gọi onSuccess với switchToLogin: true");
       onSuccess({ switchToLogin: true });

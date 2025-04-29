@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Form, Input, Button, message } from "antd";
-import axios from "axios";
+import { http } from "app/utils/setting";
 
 const Login = ({ onSuccess }) => {
   const [form] = Form.useForm();
@@ -10,25 +10,13 @@ const Login = ({ onSuccess }) => {
   const onFinish = async (values) => {
     try {
       console.log("Bắt đầu đăng nhập với dữ liệu:", values);
-      const res = await axios.post(
-        "https://apistore.cybersoft.edu.vn/api/Users/signin",
-        values,
-        {
-          headers: {
-            TokenCybersoft:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0",
-          },
-        }
-      );
-
+      const res = await http.post("/api/Users/signin", values);
       console.log("Đăng nhập thành công, response:", res.data);
+
       const token = res.data.content.accessToken;
       localStorage.setItem("accessToken", token);
-      const user = JSON.parse(atob(token.split(".")[1]));
-      const username =
-        user[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-        ] || values.email;
+      // Lấy email từ response thay vì giải mã token
+      const username = res.data.content.email || values.email;
 
       message.success("Đăng nhập thành công!");
       console.log("Đã gọi message.success cho đăng nhập");
