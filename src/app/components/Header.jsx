@@ -12,7 +12,7 @@ import {
   getRoomsByLocation,
 } from "app/services/bookingService";
 import { headerReducer, initialState } from "app/redux/reducer/store";
-import UserMenu from "./UserMenu/UserMenu";
+import UserMenu from "./User/UserMenu";
 import { useAuth } from "app/context/AuthContext";
 import AuthModal from "./auth/AuthModal";
 

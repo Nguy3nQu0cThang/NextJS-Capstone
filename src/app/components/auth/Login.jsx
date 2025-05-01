@@ -6,7 +6,7 @@ import { http } from "app/utils/setting";
 
 const Login = ({ onSuccess }) => {
   const [form] = Form.useForm();
-
+  console.log("Form instance created in Login:", form);
   const onFinish = async (values) => {
     try {
       console.log("Bắt đầu đăng nhập với dữ liệu:", values);
@@ -15,7 +15,6 @@ const Login = ({ onSuccess }) => {
 
       const token = res.data.content.accessToken;
       localStorage.setItem("accessToken", token);
-      // Lấy email từ response thay vì giải mã token
       const username = res.data.content.email || values.email;
 
       message.success("Đăng nhập thành công!");

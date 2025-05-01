@@ -25,11 +25,15 @@ const UserMenu = ({
     } else if (key === "account") {
       router.push("/user/profile")
       console.log("Điều hướng đến trang thông tin tài khoản");
+    } else if (key === "homepage") {
+      router.push("/")
+      console.log("Điều hướng đến trang chủ")
     }
   };
 
   const menuItems = isLoggedIn
     ? [
+        { label: "Trang chủ", key: "homepage" },
         { label: "Thông tin tài khoản", key: "account" },
         { label: "Đăng xuất", key: "logout", style: { color: "red" } },
       ]

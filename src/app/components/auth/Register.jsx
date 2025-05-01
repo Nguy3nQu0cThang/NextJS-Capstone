@@ -8,7 +8,7 @@ const { Option } = Select;
 
 const Register = ({ onSuccess }) => {
   const [form] = Form.useForm();
-
+  console.log("Form instance created in Register:", form);
   const onFinish = async (values) => {
     try {
       const { confirmPassword, ...userData } = values;

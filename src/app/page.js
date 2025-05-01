@@ -17,7 +17,6 @@
 // };
 "use client"
 import { Layout } from "antd";
-import Header from "./components/Header";
 import LocationList from "./components/main/LocationList";
 import { useState } from "react";
 
@@ -28,7 +27,6 @@ export default function HomePage() {
   const [selectedLocationId, setSelectedLocationId] = useState(null);
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header onSearch={(id) => setSelectedLocationId(id)} />
       <Content style={{ marginTop: "80px", padding: "0 50px" }}>
         <div style={{ minHeight: "500px", padding: "24px 0" }}>
           <h1>Trang chủ Airbnb Clone</h1>
