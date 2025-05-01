@@ -2,8 +2,10 @@
 
 import React from "react";
 import { Modal } from "antd";
-import Login from "./Login";
-import Register from "./Register";
+import dynamic from "next/dynamic";
+
+const Login = dynamic(() => import("./Login"), { ssr: false });
+const Register = dynamic(() => import("./Register"), { ssr: false });
 
 const AuthModal = ({
   isModalOpen,
@@ -14,6 +16,12 @@ const AuthModal = ({
   setIsLoggedIn,
   setUserName,
 }) => {
+  console.log(
+    "Rendering AuthModal, modalMode:",
+    modalMode,
+    "isModalOpen:",
+    isModalOpen
+  );
   return (
     <Modal
       title={modalMode === "login" ? "Đăng nhập" : "Đăng ký"}

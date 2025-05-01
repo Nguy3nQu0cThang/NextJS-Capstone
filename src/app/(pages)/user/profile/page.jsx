@@ -2,21 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Avatar, Descriptions, Alert, Spin } from "antd";
+import { Card, Avatar, Descriptions, Alert, Spin, Button, message } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../context/AuthContext";
 import { http } from "app/utils/setting";
+import UpdateProfile from "app/components/User/UpdateProfile";
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
   const { showModal } = useAuth();
 
   const getProfileAPI = async () => {
     const token = localStorage.getItem("accessToken");
-    console.log("Token:", token); // Debug token
+    console.log("Token:", token);
     if (!token) {
       setError("Vui lòng đăng nhập để xem hồ sơ.");
       setLoading(false);
@@ -26,8 +28,8 @@ const UserProfile = () => {
     }
     try {
       setLoading(true);
-      const res = await http.post("/api/Users/getProfile", {}); // Sử dụng baseURL
-      console.log("API Response:", res.data); // Debug response
+      const res = await http.post("/api/Users/getProfile", {});
+      console.log("API Response:", res.data);
       if (res.data.statusCode === 200) {
         if (res.data.content) {
           setProfile(res.data.content);
@@ -39,7 +41,7 @@ const UserProfile = () => {
       }
       setLoading(false);
     } catch (err) {
-      console.error("API Error:", err.response?.status, err.response?.data); // Debug lỗi
+      console.error("API Error:", err.response?.status, err.response?.data);
       const status = err.response?.status;
       if (status === 401) {
         setError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
@@ -57,6 +59,19 @@ const UserProfile = () => {
         setLoading(false);
       }
     }
+  };
+
+  const handleUpdateSuccess = (updatedProfile) => {
+    setProfile(updatedProfile);
+  };
+
+  const handleOpenModal = () => {
+    if (!profile) {
+      message.error("Không có thông tin hồ sơ để cập nhật.");
+      return;
+    }
+    console.log("Mở modal, profile:", profile);
+    setModalVisible(true);
   };
 
   useEffect(() => {
@@ -86,7 +101,7 @@ const UserProfile = () => {
     );
   }
 
-  console.log("profile:", profile); // Debug profile
+  console.log("profile:", profile);
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
@@ -95,16 +110,61 @@ const UserProfile = () => {
         variant="borderless"
         style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
       >
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <Avatar
-            size={100}
-            src={profile.avatar || undefined}
-            icon={<UserOutlined />}
-            style={{ border: "2px solid #1890ff" }}
-          />
-          <h2 style={{ marginTop: "10px" }}>
-            {profile.name || "Chưa cung cấp"}
-          </h2>
+        <div
+          style={{
+            marginBottom: "20px",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            gap: "20px",
+          }}
+        >
+          <div style={{ flex: 1, textAlign: "center", minWidth: "200px" }}>
+            <Avatar
+              size={100}
+              src={profile.avatar || undefined}
+              icon={<UserOutlined />}
+              style={{ border: "2px solid #1890ff" }}
+            />
+            <p>Chỉnh sửa hình ảnh</p>
+            <h2 style={{ marginTop: "10px" }}>
+              {profile.name || "Chưa cung cấp"}
+            </h2>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              alignSelf: "flex-end",
+              marginTop: "20px",
+            }}
+          >
+            <Button
+              style={{
+                backgroundColor: "green",
+                color: "white",
+                fontWeight: "500",
+                height: "36px",
+              }}
+              shape="round"
+              onClick={handleOpenModal}
+            >
+              Cập nhật tài khoản
+            </Button>
+            <Button
+              type="primary"
+              danger
+              shape="round"
+              style={{
+                fontWeight: "500",
+                height: "36px",
+              }}
+            >
+              Xóa tài khoản
+            </Button>
+          </div>
         </div>
         <Descriptions bordered column={1} styles={{ label: { width: "30%" } }}>
           <Descriptions.Item label="Họ và tên">
@@ -121,6 +181,16 @@ const UserProfile = () => {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {modalVisible && (
+        <UpdateProfile
+          visible={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          profile={profile}
+          onSuccess={handleUpdateSuccess}
+          showModal={showModal}
+        />
+      )}
     </div>
   );
 };
