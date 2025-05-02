@@ -3,10 +3,13 @@
 import React from "react";
 import { Form, Input, Button, message } from "antd";
 import { http } from "app/utils/setting";
+import { useAuth } from "app/context/AuthContext";
 
 const Login = ({ onSuccess }) => {
   const [form] = Form.useForm();
+  const { login } = useAuth();
   console.log("Form instance created in Login:", form);
+
   const onFinish = async (values) => {
     try {
       console.log("Bắt đầu đăng nhập với dữ liệu:", values);
@@ -14,9 +17,9 @@ const Login = ({ onSuccess }) => {
       console.log("Đăng nhập thành công, response:", res.data);
 
       const token = res.data.content.accessToken;
-      localStorage.setItem("accessToken", token);
       const username = res.data.content.email || values.email;
 
+      await login(username, token);
       message.success("Đăng nhập thành công!");
       console.log("Đã gọi message.success cho đăng nhập");
       form.resetFields();

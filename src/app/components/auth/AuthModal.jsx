@@ -13,8 +13,6 @@ const AuthModal = ({
   handleCancel,
   setIsModalOpen,
   setModalMode,
-  setIsLoggedIn,
-  setUserName,
 }) => {
   console.log(
     "Rendering AuthModal, modalMode:",
@@ -22,6 +20,7 @@ const AuthModal = ({
     "isModalOpen:",
     isModalOpen
   );
+
   return (
     <Modal
       title={modalMode === "login" ? "Đăng nhập" : "Đăng ký"}
@@ -35,8 +34,6 @@ const AuthModal = ({
           onSuccess={(username) => {
             console.log("Login onSuccess:", username);
             setIsModalOpen(false);
-            setIsLoggedIn(true);
-            setUserName(username);
           }}
         />
       ) : (

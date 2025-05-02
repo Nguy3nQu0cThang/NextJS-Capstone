@@ -9,74 +9,82 @@ import { http } from "app/utils/setting";
 import UpdateProfile from "app/components/User/UpdateProfile";
 
 const UserProfile = () => {
-  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
-  const { showModal } = useAuth();
+  const { userProfile, setUserProfile, checkAuthState, showModal } = useAuth();
 
   const getProfileAPI = async () => {
-    const token = localStorage.getItem("accessToken");
-    console.log("Token:", token);
-    if (!token) {
-      setError("Vui lòng đăng nhập để xem hồ sơ.");
-      setLoading(false);
-      router.push("/");
-      showModal("login");
-      return;
-    }
     try {
       setLoading(true);
-      const res = await http.post("/api/Users/getProfile", {});
-      console.log("API Response:", res.data);
-      if (res.data.statusCode === 200) {
-        if (res.data.content) {
-          setProfile(res.data.content);
-        } else {
-          setError("Không có thông tin hồ sơ để hiển thị.");
+      const isAuthenticated = await checkAuthState();
+      if (!isAuthenticated) {
+        console.log("Not authenticated, redirecting to /");
+        router.push("/");
+        return;
+      }
+
+      if (userProfile) {
+        console.log("Using cached userProfile:", userProfile);
+        setLoading(false);
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const res = await http.post(
+        "/api/Users/getProfile",
+        {},
+        {
+          signal: controller.signal,
         }
+      );
+      clearTimeout(timeoutId);
+      console.log("API Response:", res.data);
+      if (res.data.statusCode === 200 && res.data.content) {
+        setUserProfile(res.data.content);
+        localStorage.setItem("userProfile", JSON.stringify(res.data.content));
       } else {
-        setError("Không thể lấy thông tin hồ sơ.");
+        setError("Không có thông tin hồ sơ để hiển thị.");
       }
       setLoading(false);
     } catch (err) {
       console.error("API Error:", err.response?.status, err.response?.data);
-      const status = err.response?.status;
-      if (status === 401) {
-        setError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-        localStorage.removeItem("accessToken");
-        router.push("/");
-        showModal("login");
-      } else if (status === 403) {
+      if (err.name === "AbortError") {
+        setError("Yêu cầu quá lâu, vui lòng thử lại.");
+      } else if (err.response?.status === 401) {
+        router.push("/"); // Chuyển hướng, dựa vào AuthContext để mở modal
+      } else if (err.response?.status === 403) {
         setError("Bạn không có quyền truy cập hồ sơ.");
-        setLoading(false);
-      } else if (status === 400) {
+      } else if (err.response?.status === 400) {
         setError("Yêu cầu không hợp lệ. Vui lòng kiểm tra lại.");
-        setLoading(false);
       } else {
         setError("Lỗi server. Vui lòng thử lại sau.");
-        setLoading(false);
       }
+      setLoading(false);
     }
   };
 
   const handleUpdateSuccess = (updatedProfile) => {
-    setProfile(updatedProfile);
+    setUserProfile(updatedProfile);
+    localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
   };
 
   const handleOpenModal = () => {
-    if (!profile) {
+    if (!userProfile) {
       message.error("Không có thông tin hồ sơ để cập nhật.");
       return;
     }
-    console.log("Mở modal, profile:", profile);
+    console.log("Mở modal, profile:", userProfile);
     setModalVisible(true);
   };
 
   useEffect(() => {
     getProfileAPI();
   }, []);
+
+  console.log("profile:", userProfile);
 
   if (loading) {
     return (
@@ -91,7 +99,7 @@ const UserProfile = () => {
     return <Alert message={error} type="error" style={{ margin: "20px" }} />;
   }
 
-  if (!profile) {
+  if (!userProfile) {
     return (
       <Alert
         message="Không có thông tin hồ sơ để hiển thị."
@@ -100,8 +108,6 @@ const UserProfile = () => {
       />
     );
   }
-
-  console.log("profile:", profile);
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
@@ -123,13 +129,13 @@ const UserProfile = () => {
           <div style={{ flex: 1, textAlign: "center", minWidth: "200px" }}>
             <Avatar
               size={100}
-              src={profile.avatar || undefined}
+              src={userProfile.avatar || undefined}
               icon={<UserOutlined />}
               style={{ border: "2px solid #1890ff" }}
             />
             <p>Chỉnh sửa hình ảnh</p>
             <h2 style={{ marginTop: "10px" }}>
-              {profile.name || "Chưa cung cấp"}
+              {userProfile.name || "Chưa cung cấp"}
             </h2>
           </div>
           <div
@@ -168,16 +174,16 @@ const UserProfile = () => {
         </div>
         <Descriptions bordered column={1} styles={{ label: { width: "30%" } }}>
           <Descriptions.Item label="Họ và tên">
-            {profile.name || "Chưa cung cấp"}
+            {userProfile.name || "Chưa cung cấp"}
           </Descriptions.Item>
           <Descriptions.Item label="Email">
-            {profile.email || "Chưa cung cấp"}
+            {userProfile.email || "Chưa cung cấp"}
           </Descriptions.Item>
           <Descriptions.Item label="Số điện thoại">
-            {profile.phone || "Chưa cung cấp"}
+            {userProfile.phone || "Chưa cung cấp"}
           </Descriptions.Item>
           <Descriptions.Item label="Giới tính">
-            {profile.gender ? "Nam" : "Nữ"}
+            {userProfile.gender ? "Nam" : "Nữ"}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -186,7 +192,7 @@ const UserProfile = () => {
         <UpdateProfile
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}
-          profile={profile}
+          profile={userProfile}
           onSuccess={handleUpdateSuccess}
           showModal={showModal}
         />
