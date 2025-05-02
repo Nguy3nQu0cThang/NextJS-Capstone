@@ -1,19 +1,24 @@
 "use client";
 
-import { UserOutlined, HomeOutlined, RestOutlined, AppstoreOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  HomeOutlined,
+  RestOutlined,
+  AppstoreOutlined,
+} from "@ant-design/icons";
 
 const RoomDetails = ({ room }) => {
   if (!room) return null;
 
   return (
     <div className="space-y-4">
-      {/* Mô tả */}
       <div>
         <h2 className="text-xl font-semibold mb-2">Giới thiệu</h2>
-        <p className="text-gray-700">{room.moTa || "Không có mô tả chi tiết."}</p>
+        <p className="text-gray-700">
+          {room.moTa || "Không có mô tả chi tiết."}
+        </p>
       </div>
 
-      {/* Các thông số phòng */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <div className="flex items-center gap-2">
           <UserOutlined />
