@@ -4,30 +4,26 @@ import React from "react";
 import { Dropdown, Button, Space } from "antd";
 import { GlobalOutlined, MenuOutlined, UserOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { useAuth } from "app/context/AuthContext";
 
-const UserMenu = ({
-  isLoggedIn,
-  userName,
-  setIsLoggedIn,
-  setUserName,
-  showModal,
-}) => {
-  const router = useRouter()
+const UserMenu = ({ isLoggedIn, userName, showModal }) => {
+  const router = useRouter();
+  const { logout } = useAuth();
+
   const handleMenuClick = ({ key }) => {
     if (key === "signup") {
       showModal("signup");
     } else if (key === "login") {
       showModal("login");
     } else if (key === "logout") {
-      localStorage.removeItem("authToken");
-      setIsLoggedIn(false);
-      setUserName("");
+      logout();
+      console.log("Đã đăng xuất");
     } else if (key === "account") {
-      router.push("/user/profile")
+      router.push("/user/profile");
       console.log("Điều hướng đến trang thông tin tài khoản");
     } else if (key === "homepage") {
-      router.push("/")
-      console.log("Điều hướng đến trang chủ")
+      router.push("/");
+      console.log("Điều hướng đến trang chủ");
     }
   };
 

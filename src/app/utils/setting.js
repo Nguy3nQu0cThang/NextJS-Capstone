@@ -34,7 +34,7 @@ export const TOKEN_CYBERSOFT =
 
 export const http = axios.create({
   baseURL: DOMAIN,
-  timeout: 3000,
+  timeout: 10000,
 });
 
 http.interceptors.request.use((config) => {
@@ -44,7 +44,7 @@ http.interceptors.request.use((config) => {
     TokenCybersoft: TOKEN_CYBERSOFT,
   };
   if (token) {
-    config.headers.Authorization = token; 
+    config.headers.Authorization = token;
   }
   return config;
 });
@@ -54,7 +54,7 @@ http.interceptors.response.use(
   async (err) => {
     const token = localStorage.getItem(TOKEN);
 
-    if (token) {
+    if (token && err.response?.status === 401) {
       const jwtDecodeToken = decodeJWT(token);
 
       if (jwtDecodeToken) {
@@ -63,7 +63,7 @@ http.interceptors.response.use(
         if (isExpired) {
           try {
             const response = await axios.post(
-              "https://apistore.cybersoft.edu.vn/api/Users/RefeshToken",
+              `${DOMAIN}/api/Users/RefeshToken`,
               {},
               {
                 headers: {
@@ -77,11 +77,12 @@ http.interceptors.response.use(
               response.data.statusCode === 200 &&
               response.data.content?.accessToken
             ) {
-              localStorage.setItem(TOKEN, response.data.content.accessToken);
-              // Retry request gốc
+              const newToken = response.data.content.accessToken;
+              const newExpiry = new Date().getTime() + 24 * 60 * 60 * 1000; // 1 ngày
+              localStorage.setItem(TOKEN, newToken);
+              localStorage.setItem("tokenExpiry", newExpiry.toString());
               const originalRequest = err.config;
-              originalRequest.headers.Authorization =
-                response.data.content.accessToken;
+              originalRequest.headers.Authorization = newToken;
               return axios(originalRequest);
             } else {
               throw new Error("Không thể làm mới token.");
@@ -93,13 +94,16 @@ http.interceptors.response.use(
               refreshErr.response?.data
             );
             localStorage.removeItem(TOKEN);
+            localStorage.removeItem("tokenExpiry");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userProfile");
+            window.dispatchEvent(new CustomEvent("authFailed"));
             return Promise.reject(refreshErr);
           }
         }
       }
     }
 
-    // Để component xử lý lỗi
     console.error("API Error:", err.response?.status, err.response?.data);
     return Promise.reject(err);
   }

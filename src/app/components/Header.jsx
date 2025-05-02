@@ -22,9 +22,8 @@ const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
   const {
     isLoggedIn,
-    setIsLoggedIn,
     userName,
-    setUserName,
+    logout,
     showModal,
     isModalOpen,
     modalMode,
@@ -247,8 +246,7 @@ const Header = ({ onSearch }) => {
       <UserMenu
         isLoggedIn={isLoggedIn}
         userName={userName}
-        setIsLoggedIn={setIsLoggedIn}
-        setUserName={setUserName}
+        logout={logout}
         showModal={showModal}
       />
 
@@ -258,8 +256,6 @@ const Header = ({ onSearch }) => {
         handleCancel={handleCancel}
         setIsModalOpen={setIsModalOpen}
         setModalMode={setModalMode}
-        setIsLoggedIn={setIsLoggedIn}
-        setUserName={setUserName}
       />
     </AntHeader>
   );
