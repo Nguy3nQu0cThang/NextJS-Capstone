@@ -20,7 +20,7 @@ const RoomDetailPage = () => {
       try {
         const res = await getRoomDetail(id);
         console.log("Room data:", res.data.content);
-        setRoomData(res.data.content); // chú ý phải lấy từ res.data.content
+        setRoomData(res.data.content);
       } catch (error) {
         console.error("Lỗi lấy chi tiết phòng:", error);
       } finally {
@@ -47,12 +47,10 @@ const RoomDetailPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Phần Gallery */}
       <div className="relative w-full h-auto overflow-hidden">
         <RoomGallery images={[roomData.hinhAnh]} />
       </div>
 
-      {/* Phần tiêu đề và Booking card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
         <div className="md:col-span-2 space-y-6">
           <RoomHeader room={roomData} />
@@ -61,7 +59,6 @@ const RoomDetailPage = () => {
           <RoomMap room={roomData} />
         </div>
 
-        {/* Booking Card */}
         <div className="md:col-span-1">
           <RoomBookingCard room={roomData} />
         </div>
