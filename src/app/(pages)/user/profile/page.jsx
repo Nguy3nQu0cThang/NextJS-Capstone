@@ -32,7 +32,7 @@ const UserProfile = () => {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       const res = await http.post(
         "/api/Users/getProfile",
         {},
@@ -50,33 +50,41 @@ const UserProfile = () => {
       }
       setLoading(false);
     } catch (err) {
-      console.error("API Error:", err.response?.status, err.response?.data);
+      console.error(
+        "API Error:",
+        err.response?.status || err.code,
+        err.response?.data || err.message
+      );
       if (err.name === "AbortError") {
         setError("Yêu cầu quá lâu, vui lòng thử lại.");
-      } else if (err.response?.status === 401) {
-        router.push("/"); // Chuyển hướng, dựa vào AuthContext để mở modal
-      } else if (err.response?.status === 403) {
-        setError("Bạn không có quyền truy cập hồ sơ.");
-      } else if (err.response?.status === 400) {
-        setError("Yêu cầu không hợp lệ. Vui lòng kiểm tra lại.");
+        setLoading(false);
       } else {
-        setError("Lỗi server. Vui lòng thử lại sau.");
+        router.push("/");
       }
-      setLoading(false);
     }
   };
 
   const handleUpdateSuccess = (updatedProfile) => {
+    console.log(
+      "handleUpdateSuccess called with updatedProfile:",
+      updatedProfile
+    );
     setUserProfile(updatedProfile);
     localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+    console.log(
+      "Đã lưu userProfile vào localStorage:",
+      localStorage.getItem("userProfile")
+    );
+    console.log("Reload toàn bộ trang để hiển thị thông tin mới...");
+    window.location.reload(); // Reload toàn bộ trang
   };
 
-  const handleOpenModal = () => {
+  const handleOpenUpdateModal = () => {
     if (!userProfile) {
       message.error("Không có thông tin hồ sơ để cập nhật.");
       return;
     }
-    console.log("Mở modal, profile:", userProfile);
+    console.log("Mở modal cập nhật, profile:", userProfile);
     setModalVisible(true);
   };
 
@@ -133,7 +141,7 @@ const UserProfile = () => {
               icon={<UserOutlined />}
               style={{ border: "2px solid #1890ff" }}
             />
-            <p>Chỉnh sửa hình ảnh</p>
+            <p style={{ marginTop: "20px" }}>Chỉnh sửa hình ảnh</p>
             <h2 style={{ marginTop: "10px" }}>
               {userProfile.name || "Chưa cung cấp"}
             </h2>
@@ -155,7 +163,7 @@ const UserProfile = () => {
                 height: "36px",
               }}
               shape="round"
-              onClick={handleOpenModal}
+              onClick={handleOpenUpdateModal}
             >
               Cập nhật tài khoản
             </Button>
