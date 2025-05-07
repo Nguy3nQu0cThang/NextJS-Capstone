@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Avatar, Descriptions, Alert, Spin, Button, message } from "antd";
+import { Card, Avatar, Descriptions, Alert, Spin, Button, message } from "antd"; // Bỏ Modal
 import { UserOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../context/AuthContext";
 import { http } from "app/utils/setting";
@@ -12,6 +12,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [notification, setNotification] = useState(null);
   const router = useRouter();
   const { userProfile, setUserProfile, checkAuthState, showModal } = useAuth();
 
@@ -76,7 +77,203 @@ const UserProfile = () => {
       localStorage.getItem("userProfile")
     );
     console.log("Reload toàn bộ trang để hiển thị thông tin mới...");
-    window.location.reload(); // Reload toàn bộ trang
+    window.location.reload();
+  };
+
+  const handleDeleteAccount = () => {
+    console.log("handleDeleteAccount được gọi"); // Debug: Xác nhận hàm chạy
+
+    // Dùng window.confirm thay cho Modal.confirm
+    const confirmed = window.confirm(
+      "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác."
+    );
+    console.log("Người dùng xác nhận:", confirmed); // Debug: Xác nhận người dùng bấm OK/Cancel
+
+    if (!confirmed) {
+      console.log("Người dùng hủy xóa tài khoản");
+      return;
+    }
+
+    // Logic xóa tài khoản
+    (async () => {
+      try {
+        console.log("userProfile:", userProfile); // Debug
+        if (!userProfile || !userProfile.email) {
+          console.log("Thiếu userProfile hoặc email");
+          setNotification({
+            type: "error",
+            message: "Không tìm thấy thông tin tài khoản để xóa.",
+          });
+          message.error({
+            content: "Không tìm thấy thông tin tài khoản để xóa.",
+            style: { color: "#ff4d4f", fontSize: "12px" },
+          });
+          return;
+        }
+
+        const token = localStorage.getItem("accessToken");
+        console.log("accessToken:", token); // Debug
+        if (!token) {
+          console.log("Thiếu accessToken");
+          setNotification({
+            type: "error",
+            message: "Vui lòng đăng nhập để xóa tài khoản.",
+          });
+          message.error({
+            content: "Vui lòng đăng nhập để xóa tài khoản.",
+            style: { color: "#ff4d4f", fontSize: "12px" },
+          });
+          setTimeout(() => {
+            setNotification(null);
+            router.push("/");
+            showModal("login");
+          }, 3000);
+          return;
+        }
+
+        const isAuthenticated = await checkAuthState();
+        console.log("isAuthenticated:", isAuthenticated); // Debug
+        if (!isAuthenticated) {
+          console.log("Không xác thực được");
+          setNotification({
+            type: "error",
+            message: "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+          });
+          message.error({
+            content: "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+            style: { color: "#ff4d4f", fontSize: "12px" },
+          });
+          setTimeout(() => {
+            setNotification(null);
+            router.push("/");
+            showModal("login");
+          }, 3000);
+          return;
+        }
+
+        console.log("Gọi API xóa tài khoản với email:", userProfile.email);
+        const res = await http.delete(`/api/Users?email=${userProfile.email}`);
+        console.log("Xóa tài khoản response:", res); // Debug: Log toàn bộ response
+
+        if (
+          res.status === 200 ||
+          (res.data && (res.data.statusCode === 200 || res.data.success))
+        ) {
+          console.log("Xóa tài khoản thành công");
+          setNotification({
+            type: "success",
+            message: "Tài khoản của bạn đã được xóa thành công!",
+          });
+          message.success({
+            content: "Tài khoản của bạn đã được xóa thành công!",
+            style: { color: "#52c41a", fontSize: "12px" },
+          });
+          localStorage.clear();
+          setTimeout(() => {
+            setNotification(null);
+            router.push("/");
+            showModal("login");
+          }, 3000);
+        } else {
+          console.log("Xóa tài khoản thất bại, response không mong muốn");
+          setNotification({
+            type: "error",
+            message: res.data?.message || "Xóa tài khoản thất bại!",
+          });
+          message.error({
+            content: res.data?.message || "Xóa tài khoản thất bại!",
+            style: { color: "#ff4d4f", fontSize: "12px" },
+          });
+        }
+      } catch (error) {
+        console.error(
+          "Xóa tài khoản lỗi:",
+          error.response?.data || error.message
+        ); // Debug
+        if (error.response?.status === 405) {
+          console.log("Thử POST vì DELETE không được hỗ trợ...");
+          try {
+            const resPost = await http.post(
+              `/api/Users?email=${userProfile.email}`,
+              {}
+            );
+            console.log("Xóa tài khoản response (POST):", resPost);
+            if (
+              resPost.status === 200 ||
+              (resPost.data &&
+                (resPost.data.statusCode === 200 || resPost.data.success))
+            ) {
+              console.log("Xóa tài khoản thành công (POST)");
+              setNotification({
+                type: "success",
+                message: "Tài khoản của bạn đã được xóa thành công!",
+              });
+              message.success({
+                content: "Tài khoản của bạn đã được xóa thành công!",
+                style: { color: "#52c41a", fontSize: "12px" },
+              });
+              localStorage.clear();
+              setTimeout(() => {
+                setNotification(null);
+                router.push("/");
+                showModal("login");
+              }, 3000);
+            } else {
+              console.log("POST thất bại, response không mong muốn");
+              setNotification({
+                type: "error",
+                message: resPost.data?.message || "Xóa tài khoản thất bại!",
+              });
+              message.error({
+                content: resPost.data?.message || "Xóa tài khoản thất bại!",
+                style: { color: "#ff4d4f", fontSize: "12px" },
+              });
+            }
+          } catch (postError) {
+            console.error(
+              "POST lỗi:",
+              postError.response?.data || postError.message
+            );
+            setNotification({
+              type: "error",
+              message:
+                postError.response?.data?.message || "Xóa tài khoản thất bại!",
+            });
+            message.error({
+              content:
+                postError.response?.data?.message || "Xóa tài khoản thất bại!",
+              style: { color: "#ff4d4f", fontSize: "12px" },
+            });
+          }
+        } else if (error.response?.status === 401) {
+          console.log("Lỗi 401: Phiên đăng nhập hết hạn");
+          setNotification({
+            type: "error",
+            message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
+          });
+          message.error({
+            content: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
+            style: { color: "#ff4d4f", fontSize: "12px" },
+          });
+          localStorage.clear();
+          setTimeout(() => {
+            setNotification(null);
+            router.push("/");
+            showModal("login");
+          }, 3000);
+        } else {
+          console.log("Lỗi khác:", error.response?.status);
+          setNotification({
+            type: "error",
+            message: error.response?.data?.message || "Xóa tài khoản thất bại!",
+          });
+          message.error({
+            content: error.response?.data?.message || "Xóa tài khoản thất bại!",
+            style: { color: "#ff4d4f", fontSize: "12px" },
+          });
+        }
+      }
+    })();
   };
 
   const handleOpenUpdateModal = () => {
@@ -175,6 +372,7 @@ const UserProfile = () => {
                 fontWeight: "500",
                 height: "36px",
               }}
+              onClick={handleDeleteAccount}
             >
               Xóa tài khoản
             </Button>
