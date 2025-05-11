@@ -13,7 +13,8 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
-  const [authFailed, setAuthFailed] = useState(false); // Thêm state để theo dõi authFailed
+  const [authFailed, setAuthFailed] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Thêm state
   const router = useRouter();
 
   const showModal = (mode) => {
@@ -23,53 +24,92 @@ export const AuthProvider = ({ children }) => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
-    setAuthFailed(false); // Reset authFailed khi đóng modal
+    setAuthFailed(false);
   };
 
-  const checkAuthState = () => {
-    console.log("Checking auth state on load");
-    const token = localStorage.getItem("accessToken");
-    const expiry = localStorage.getItem("tokenExpiry");
-    const storedUserName = localStorage.getItem("userName");
-    const storedProfile = localStorage.getItem("userProfile");
+  const checkAuthState = async () => {
+    try {
+      console.log("Checking auth state...");
+      const token = localStorage.getItem("accessToken");
+      const expiry = localStorage.getItem("tokenExpiry");
+      const storedUserName = localStorage.getItem("userName");
+      const storedProfile = localStorage.getItem("userProfile");
 
-    console.log(
-      "Token:",
-      token,
-      "Expiry:",
-      expiry,
-      "UserName:",
-      storedUserName
-    );
+      console.log("Token:", token);
+      console.log("Expiry:", expiry);
+      console.log("Stored UserName:", storedUserName);
+      console.log("Stored Profile:", storedProfile);
 
-    if (token && expiry && storedUserName && storedProfile) {
-      const now = new Date().getTime();
-      if (now < parseInt(expiry)) {
-        try {
-          const user = JSON.parse(atob(token.split(".")[1]));
-          setUserName(
-            user[
-              "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-            ] || storedUserName
-          );
-          setUserProfile(JSON.parse(storedProfile));
-          setIsLoggedIn(true);
-          return true;
-        } catch (error) {
-          console.error("Lỗi giải mã token:", error);
-        }
+      if (!token || !expiry || !storedUserName || !storedProfile) {
+        console.log("Missing token or user data");
+        return false;
       }
-    }
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("tokenExpiry");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userProfile");
-    setIsLoggedIn(false);
-    setUserName("");
-    setUserProfile(null);
-    return false;
+      const now = new Date().getTime();
+      if (now >= parseInt(expiry)) {
+        console.log("Token expired");
+        return false;
+      }
+
+      // Gọi API để xác minh token
+      const res = await http.post("/api/Users/getProfile", {});
+      console.log("API response:", res.data);
+
+      if (res.data.statusCode !== 200 || !res.data.content) {
+        console.log("Invalid profile data");
+        return false;
+      }
+
+      const profile = res.data.content;
+      console.log("User profile:", profile);
+
+      // Giải mã token để lấy userName (nếu cần)
+      try {
+        const user = JSON.parse(atob(token.split(".")[1]));
+        setUserName(
+          user[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+          ] || storedUserName
+        );
+      } catch (error) {
+        console.error("Lỗi giải mã token:", error);
+        setUserName(storedUserName);
+      }
+
+      setUserProfile(profile);
+      localStorage.setItem("userProfile", JSON.stringify(profile));
+      setIsLoggedIn(true);
+      return true;
+    } catch (err) {
+      console.error("Check auth error:", err);
+      return false;
+    } finally {
+      setIsCheckingAuth(false);
+    }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initAuth = async () => {
+      const isValid = await checkAuthState();
+      if (isMounted && !isValid) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("tokenExpiry");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userProfile");
+        setIsLoggedIn(false);
+        setUserName("");
+        setUserProfile(null);
+      }
+    };
+
+    initAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleAuthFailed = () => {
@@ -81,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoggedIn(false);
       setUserName("");
       setUserProfile(null);
-      setAuthFailed(true); // Đánh dấu authFailed
+      setAuthFailed(true);
       router.push("/");
     };
     window.addEventListener("authFailed", handleAuthFailed);
@@ -89,11 +129,6 @@ export const AuthProvider = ({ children }) => {
   }, [router]);
 
   useEffect(() => {
-    checkAuthState();
-  }, []);
-
-  useEffect(() => {
-    // Mở modal đăng nhập sau khi chuyển hướng về /
     if (authFailed && router.pathname === "/") {
       showModal("login");
     }
@@ -114,6 +149,7 @@ export const AuthProvider = ({ children }) => {
         setIsLoggedIn(true);
         setUserName(username);
         message.success("Đăng nhập thành công!");
+        return true;
       } else {
         throw new Error("Không thể lấy thông tin hồ sơ.");
       }
@@ -127,6 +163,7 @@ export const AuthProvider = ({ children }) => {
       setUserName("");
       setUserProfile(null);
       message.error("Đăng nhập thất bại. Vui lòng thử lại.");
+      return false;
     }
   };
 
@@ -160,6 +197,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         checkAuthState,
+        isCheckingAuth, // Thêm vào context
       }}
     >
       {children}
