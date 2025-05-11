@@ -14,14 +14,7 @@ const AuthModal = ({
   setIsModalOpen,
   setModalMode,
 }) => {
-  console.log(
-    "Rendering AuthModal, modalMode:",
-    modalMode,
-    "isModalOpen:",
-    isModalOpen
-  );
-
-  return (
+    return (
     <Modal
       title={modalMode === "login" ? "Đăng nhập" : "Đăng ký"}
       open={isModalOpen}
@@ -32,20 +25,17 @@ const AuthModal = ({
       {modalMode === "login" ? (
         <Login
           onSuccess={(username) => {
-            console.log("Login onSuccess:", username);
             setIsModalOpen(false);
           }}
         />
       ) : (
         <Register
           onSuccess={(options) => {
-            console.log("Register onSuccess:", options);
             setIsModalOpen(false);
             if (options.switchToLogin) {
               setTimeout(() => {
                 setModalMode("login");
                 setIsModalOpen(true);
-                console.log("Chuyển sang modal Login");
               }, 0);
             }
           }}

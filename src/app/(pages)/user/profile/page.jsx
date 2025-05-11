@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Avatar, Descriptions, Alert, Spin, Button, message } from "antd"; // Bỏ Modal
+import {
+  Card,
+  Avatar,
+  Descriptions,
+  Alert,
+  Spin,
+  Button,
+  message,
+  Modal,
+} from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../context/AuthContext";
 import { http } from "app/utils/setting";
@@ -12,284 +21,180 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [notification, setNotification] = useState(null);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const router = useRouter();
   const { userProfile, setUserProfile, checkAuthState, showModal } = useAuth();
 
-  const getProfileAPI = async () => {
-    try {
-      setLoading(true);
-      const isAuthenticated = await checkAuthState();
-      if (!isAuthenticated) {
-        console.log("Not authenticated, redirecting to /");
-        router.push("/");
-        return;
-      }
+  useEffect(() => {
+    const getProfileAPI = async () => {
+      try {
+        setLoading(true);
+        const isAuthenticated = await checkAuthState();
+        if (!isAuthenticated) return router.push("/");
 
-      if (userProfile) {
-        console.log("Using cached userProfile:", userProfile);
-        setLoading(false);
-        return;
-      }
+        if (userProfile) return setLoading(false);
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await http.post(
-        "/api/Users/getProfile",
-        {},
-        {
-          signal: controller.signal,
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const res = await http.post(
+          "https://apistore.cybersoft.edu.vn/api/Users/getProfile",
+          {},
+          { signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+
+        const { statusCode, content } = res.data;
+        if (statusCode === 200 && content) {
+          setUserProfile(content);
+          localStorage.setItem("userProfile", JSON.stringify(content));
+        } else {
+          setError("Không có thông tin hồ sơ để hiển thị.");
         }
-      );
-      clearTimeout(timeoutId);
-      console.log("API Response:", res.data);
-      if (res.data.statusCode === 200 && res.data.content) {
-        setUserProfile(res.data.content);
-        localStorage.setItem("userProfile", JSON.stringify(res.data.content));
-      } else {
-        setError("Không có thông tin hồ sơ để hiển thị.");
-      }
-      setLoading(false);
-    } catch (err) {
-      console.error(
-        "API Error:",
-        err.response?.status || err.code,
-        err.response?.data || err.message
-      );
-      if (err.name === "AbortError") {
-        setError("Yêu cầu quá lâu, vui lòng thử lại.");
+      } catch (err) {
+        if (err.name === "AbortError")
+          setError("Yêu cầu quá lâu, vui lòng thử lại.");
+        else router.push("/");
+      } finally {
         setLoading(false);
-      } else {
-        router.push("/");
       }
-    }
-  };
+    };
 
-  const handleUpdateSuccess = (updatedProfile) => {
-    console.log(
-      "handleUpdateSuccess called with updatedProfile:",
-      updatedProfile
-    );
-    setUserProfile(updatedProfile);
-    localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-    console.log(
-      "Đã lưu userProfile vào localStorage:",
-      localStorage.getItem("userProfile")
-    );
-    console.log("Reload toàn bộ trang để hiển thị thông tin mới...");
+    getProfileAPI();
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleUpdateSuccess = (updated) => {
+    setUserProfile(updated);
+    localStorage.setItem("userProfile", JSON.stringify(updated));
     window.location.reload();
   };
 
-  const handleDeleteAccount = () => {
-    console.log("handleDeleteAccount được gọi"); // Debug: Xác nhận hàm chạy
-
-    // Dùng window.confirm thay cho Modal.confirm
-    const confirmed = window.confirm(
-      "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác."
-    );
-    console.log("Người dùng xác nhận:", confirmed); // Debug: Xác nhận người dùng bấm OK/Cancel
-
-    if (!confirmed) {
-      console.log("Người dùng hủy xóa tài khoản");
-      return;
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      console.log("File selected:", file.name);
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setUploadModalVisible(true);
     }
+  };
 
-    // Logic xóa tài khoản
-    (async () => {
-      try {
-        console.log("userProfile:", userProfile); // Debug
-        if (!userProfile || !userProfile.email) {
-          console.log("Thiếu userProfile hoặc email");
-          setNotification({
-            type: "error",
-            message: "Không tìm thấy thông tin tài khoản để xóa.",
-          });
-          message.error({
-            content: "Không tìm thấy thông tin tài khoản để xóa.",
-            style: { color: "#ff4d4f", fontSize: "12px" },
-          });
-          return;
-        }
-
-        const token = localStorage.getItem("accessToken");
-        console.log("accessToken:", token); // Debug
-        if (!token) {
-          console.log("Thiếu accessToken");
-          setNotification({
-            type: "error",
-            message: "Vui lòng đăng nhập để xóa tài khoản.",
-          });
-          message.error({
-            content: "Vui lòng đăng nhập để xóa tài khoản.",
-            style: { color: "#ff4d4f", fontSize: "12px" },
-          });
-          setTimeout(() => {
-            setNotification(null);
-            router.push("/");
-            showModal("login");
-          }, 3000);
-          return;
-        }
-
-        const isAuthenticated = await checkAuthState();
-        console.log("isAuthenticated:", isAuthenticated); // Debug
-        if (!isAuthenticated) {
-          console.log("Không xác thực được");
-          setNotification({
-            type: "error",
-            message: "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
-          });
-          message.error({
-            content: "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
-            style: { color: "#ff4d4f", fontSize: "12px" },
-          });
-          setTimeout(() => {
-            setNotification(null);
-            router.push("/");
-            showModal("login");
-          }, 3000);
-          return;
-        }
-
-        console.log("Gọi API xóa tài khoản với email:", userProfile.email);
-        const res = await http.delete(`/api/Users?email=${userProfile.email}`);
-        console.log("Xóa tài khoản response:", res); // Debug: Log toàn bộ response
-
-        if (
-          res.status === 200 ||
-          (res.data && (res.data.statusCode === 200 || res.data.success))
-        ) {
-          console.log("Xóa tài khoản thành công");
-          setNotification({
-            type: "success",
-            message: "Tài khoản của bạn đã được xóa thành công!",
-          });
-          message.success({
-            content: "Tài khoản của bạn đã được xóa thành công!",
-            style: { color: "#52c41a", fontSize: "12px" },
-          });
-          localStorage.clear();
-          setTimeout(() => {
-            setNotification(null);
-            router.push("/");
-            showModal("login");
-          }, 3000);
-        } else {
-          console.log("Xóa tài khoản thất bại, response không mong muốn");
-          setNotification({
-            type: "error",
-            message: res.data?.message || "Xóa tài khoản thất bại!",
-          });
-          message.error({
-            content: res.data?.message || "Xóa tài khoản thất bại!",
-            style: { color: "#ff4d4f", fontSize: "12px" },
-          });
-        }
-      } catch (error) {
-        console.error(
-          "Xóa tài khoản lỗi:",
-          error.response?.data || error.message
-        ); // Debug
-        if (error.response?.status === 405) {
-          console.log("Thử POST vì DELETE không được hỗ trợ...");
-          try {
-            const resPost = await http.post(
-              `/api/Users?email=${userProfile.email}`,
-              {}
-            );
-            console.log("Xóa tài khoản response (POST):", resPost);
-            if (
-              resPost.status === 200 ||
-              (resPost.data &&
-                (resPost.data.statusCode === 200 || resPost.data.success))
-            ) {
-              console.log("Xóa tài khoản thành công (POST)");
-              setNotification({
-                type: "success",
-                message: "Tài khoản của bạn đã được xóa thành công!",
-              });
-              message.success({
-                content: "Tài khoản của bạn đã được xóa thành công!",
-                style: { color: "#52c41a", fontSize: "12px" },
-              });
-              localStorage.clear();
-              setTimeout(() => {
-                setNotification(null);
-                router.push("/");
-                showModal("login");
-              }, 3000);
-            } else {
-              console.log("POST thất bại, response không mong muốn");
-              setNotification({
-                type: "error",
-                message: resPost.data?.message || "Xóa tài khoản thất bại!",
-              });
-              message.error({
-                content: resPost.data?.message || "Xóa tài khoản thất bại!",
-                style: { color: "#ff4d4f", fontSize: "12px" },
-              });
-            }
-          } catch (postError) {
-            console.error(
-              "POST lỗi:",
-              postError.response?.data || postError.message
-            );
-            setNotification({
-              type: "error",
-              message:
-                postError.response?.data?.message || "Xóa tài khoản thất bại!",
-            });
-            message.error({
-              content:
-                postError.response?.data?.message || "Xóa tài khoản thất bại!",
-              style: { color: "#ff4d4f", fontSize: "12px" },
-            });
-          }
-        } else if (error.response?.status === 401) {
-          console.log("Lỗi 401: Phiên đăng nhập hết hạn");
-          setNotification({
-            type: "error",
-            message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
-          });
-          message.error({
-            content: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
-            style: { color: "#ff4d4f", fontSize: "12px" },
-          });
-          localStorage.clear();
-          setTimeout(() => {
-            setNotification(null);
-            router.push("/");
-            showModal("login");
-          }, 3000);
-        } else {
-          console.log("Lỗi khác:", error.response?.status);
-          setNotification({
-            type: "error",
-            message: error.response?.data?.message || "Xóa tài khoản thất bại!",
-          });
-          message.error({
-            content: error.response?.data?.message || "Xóa tài khoản thất bại!",
-            style: { color: "#ff4d4f", fontSize: "12px" },
-          });
-        }
+  const handleUploadAvatar = async () => {
+    try {
+      setUploadModalVisible(false); // Đóng modal ngay lập tức
+      if (!selectedFile) {
+        message.error({
+          content: "Vui lòng chọn một ảnh.",
+          style: { fontSize: "12px" },
+        });
+        return;
       }
-    })();
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        message.error({
+          content: "Vui lòng đăng nhập để tải ảnh.",
+          style: { fontSize: "12px" },
+        });
+        setTimeout(() => {
+          router.push("/");
+          showModal("login");
+        }, 2000);
+        return;
+      }
+
+      const isAuthenticated = await checkAuthState();
+      if (!isAuthenticated) {
+        message.error({
+          content: "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+          style: { fontSize: "12px" },
+        });
+        setTimeout(() => {
+          router.push("/");
+          showModal("login");
+        }, 2000);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("formFile", selectedFile);
+      const res = await http.post("/api/Users/uploadavatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (
+        res.status === 200 &&
+        res.data.statusCode === 200 &&
+        res.data.content
+      ) {
+        const newAvatarUrl = res.data.content.avatar;
+        const updatedProfile = { ...userProfile, avatar: newAvatarUrl };
+        setUserProfile(updatedProfile);
+        localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+        message.success({
+          content: "Cập nhật avatar thành công!",
+          style: { fontSize: "12px" },
+        });
+      } else {
+        message.error({
+          content: res.data?.message || "Cập nhật avatar thất bại!",
+          style: { fontSize: "12px" },
+        });
+      }
+    } catch (err) {
+      message.error({
+        content: err.response?.data?.message || "Đã xảy ra lỗi khi tải ảnh.",
+        style: { fontSize: "12px" },
+      });
+      if (err.response?.status === 401) {
+        localStorage.clear();
+        setTimeout(() => {
+          router.push("/");
+          showModal("login");
+        }, 2000);
+      }
+    } finally {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác."
+      )
+    )
+      return;
+
+    try {
+      const res = await http.delete(`/api/Users?email=${userProfile?.email}`);
+      if (
+        res.status === 200 ||
+        res.data?.statusCode === 200 ||
+        res.data?.success
+      ) {
+        message.success("Tài khoản đã được xóa thành công!");
+        localStorage.clear();
+        router.push("/");
+        showModal("login");
+      } else {
+        message.error(res.data?.message || "Xóa tài khoản thất bại!");
+      }
+    } catch (err) {
+      message.error(err.response?.data?.message || "Xóa tài khoản thất bại!");
+    }
   };
 
   const handleOpenUpdateModal = () => {
-    if (!userProfile) {
-      message.error("Không có thông tin hồ sơ để cập nhật.");
-      return;
-    }
-    console.log("Mở modal cập nhật, profile:", userProfile);
+    if (!userProfile)
+      return message.error("Không có thông tin hồ sơ để cập nhật.");
     setModalVisible(true);
   };
-
-  useEffect(() => {
-    getProfileAPI();
-  }, []);
-
-  console.log("profile:", userProfile);
 
   if (loading) {
     return (
@@ -334,11 +239,29 @@ const UserProfile = () => {
           <div style={{ flex: 1, textAlign: "center", minWidth: "200px" }}>
             <Avatar
               size={100}
-              src={userProfile.avatar || undefined}
+              src={previewUrl || userProfile.avatar || undefined}
               icon={<UserOutlined />}
               style={{ border: "2px solid #1890ff" }}
             />
-            <p style={{ marginTop: "20px" }}>Chỉnh sửa hình ảnh</p>
+            <p style={{ marginTop: "20px" }}>
+              <label
+                htmlFor="avatar-upload"
+                style={{
+                  cursor: "pointer",
+                  color: "#1890ff",
+                  textDecoration: "underline",
+                }}
+              >
+                Chỉnh sửa hình ảnh
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+            </p>
             <h2 style={{ marginTop: "10px" }}>
               {userProfile.name || "Chưa cung cấp"}
             </h2>
@@ -378,7 +301,8 @@ const UserProfile = () => {
             </Button>
           </div>
         </div>
-        <Descriptions bordered column={1} styles={{ label: { width: "30%" } }}>
+
+        <Descriptions bordered column={1}>
           <Descriptions.Item label="Họ và tên">
             {userProfile.name || "Chưa cung cấp"}
           </Descriptions.Item>
@@ -403,6 +327,33 @@ const UserProfile = () => {
           showModal={showModal}
         />
       )}
+
+      <Modal
+        title="Xác nhận tải ảnh"
+        open={uploadModalVisible}
+        onOk={handleUploadAvatar}
+        onCancel={() => {
+          setUploadModalVisible(false);
+          setSelectedFile(null);
+          setPreviewUrl(null);
+        }}
+        okText="Tải lên"
+        okType="primary"
+        cancelText="Hủy"
+        maskClosable={false}
+        style={{ zIndex: 9999 }}
+      >
+        <div>
+          <p>Bạn có muốn tải ảnh này lên làm avatar?</p>
+          {previewUrl && (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              style={{ maxWidth: "100%", marginTop: "10px" }}
+            />
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -15,12 +15,9 @@ const UpdateProfile = ({
   const [passwordForm] = Form.useForm();
   const [changePasswordModalVisible, setChangePasswordModalVisible] =
     useState(false);
-  const [notification, setNotification] = useState(null); // State cho thông báo
-
-  console.log("Form instance created:", form);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    console.log("Modal visible:", visible, "Profile:", profile);
     if (profile) {
       form.setFieldsValue({
         email: profile.email,
@@ -31,14 +28,24 @@ const UpdateProfile = ({
     }
   }, [profile, form]);
 
+  const handleNotification = (type, message) =>
+    setNotification({ type, message });
+
+  const handleError = (error, loginRedirect = false) => {
+    const message = error.response?.data?.message || "Có lỗi xảy ra!";
+    handleNotification("error", message);
+    if (error.response?.status === 401 && loginRedirect) {
+      localStorage.removeItem("accessToken");
+      showModal("login");
+      onCancel();
+    }
+  };
+
   const onFinish = async (values) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setNotification({
-          type: "error",
-          message: "Vui lòng đăng nhập để cập nhật hồ sơ.",
-        });
+        handleNotification("error", "Vui lòng đăng nhập để cập nhật hồ sơ.");
         showModal("login");
         onCancel();
         return;
@@ -46,128 +53,84 @@ const UpdateProfile = ({
 
       const payload = {
         id: profile?.id || 0,
-        email: values.email,
-        name: values.name,
-        gender: values.gender,
-        phone: values.phone,
+        ...values,
       };
 
-      console.log("Cập nhật hồ sơ với dữ liệu:", payload);
       const res = await http.post(
         "https://apistore.cybersoft.edu.vn/api/Users/updateProfile",
         payload
       );
-      console.log("Cập nhật hồ sơ thành công, response:", res.data);
 
       if (res.data.statusCode === 200) {
-        console.log("Gọi onSuccess với dữ liệu:", res.data.content);
-        setNotification({
-          type: "success",
-          message: "Hồ sơ của bạn đã được cập nhật thành công!",
-        });
+        handleNotification(
+          "success",
+          "Hồ sơ của bạn đã được cập nhật thành công!"
+        );
         onSuccess(res.data.content);
         form.resetFields();
         setTimeout(() => {
           setNotification(null);
           onCancel();
-        }, 3000); // Đợi 3 giây để thông báo hiển thị
+        }, 3000);
       } else {
-        setNotification({
-          type: "error",
-          message: "Cập nhật hồ sơ thất bại!",
-        });
+        handleNotification("error", "Cập nhật hồ sơ thất bại!");
       }
     } catch (error) {
-      console.error(
-        "Cập nhật hồ sơ thất bại:",
-        error.response?.data || error.message
-      );
-      if (error.response?.status === 401) {
-        setNotification({
-          type: "error",
-          message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
-        });
-        localStorage.removeItem("accessToken");
-        showModal("login");
-        onCancel();
-      } else {
-        setNotification({
-          type: "error",
-          message: error.response?.data?.message || "Cập nhật hồ sơ thất bại!",
-        });
-      }
+      handleError(error, true);
     }
   };
 
-  const onChangePasswordFinish = async (values) => {
+  const onChangePasswordFinish = async ({ newPassword, confirmPassword }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setNotification({
-          type: "error",
-          message: "Vui lòng đăng nhập để đổi mật khẩu.",
-        });
+        handleNotification("error", "Vui lòng đăng nhập để đổi mật khẩu.");
         showModal("login");
         setChangePasswordModalVisible(false);
         return;
       }
 
-      if (values.newPassword !== values.confirmPassword) {
-        setNotification({
-          type: "error",
-          message: "Mật khẩu xác nhận không khớp!",
-        });
+      if (newPassword !== confirmPassword) {
+        handleNotification("error", "Mật khẩu xác nhận không khớp!");
         return;
       }
 
-      const payload = {
-        newPassword: values.newPassword,
-      };
-
-      console.log("Đổi mật khẩu với dữ liệu:", payload);
       const res = await http.post(
         "https://apistore.cybersoft.edu.vn/api/Users/changePassword",
-        payload
+        { newPassword }
       );
-      console.log("Đổi mật khẩu thành công, response:", res.data);
 
       if (res.data.statusCode === 200) {
-        setNotification({
-          type: "success",
-          message: "Mật khẩu của bạn đã được thay đổi thành công!",
-        });
+        handleNotification(
+          "success",
+          "Mật khẩu của bạn đã được thay đổi thành công!"
+        );
         passwordForm.resetFields();
         setTimeout(() => {
           setNotification(null);
           setChangePasswordModalVisible(false);
-        }, 3000); // Đợi 3 giây để thông báo hiển thị
+        }, 3000);
       } else {
-        setNotification({
-          type: "error",
-          message: "Đổi mật khẩu thất bại!",
-        });
+        handleNotification("error", "Đổi mật khẩu thất bại!");
       }
     } catch (error) {
-      console.error(
-        "Đổi mật khẩu thất bại:",
-        error.response?.data || error.message
-      );
-      if (error.response?.status === 401) {
-        setNotification({
-          type: "error",
-          message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
-        });
-        localStorage.removeItem("accessToken");
-        showModal("login");
-        setChangePasswordModalVisible(false);
-      } else {
-        setNotification({
-          type: "error",
-          message: error.response?.data?.message || "Đổi mật khẩu thất bại!",
-        });
-      }
+      handleError(error, true);
     }
   };
+
+  const renderNotification = () =>
+    notification && (
+      <div style={{ marginBottom: 8 }}>
+        <span
+          style={{
+            color: notification.type === "success" ? "#52c41a" : "#ff4d4f",
+            fontSize: 12,
+          }}
+        >
+          {notification.message}
+        </span>
+      </div>
+    );
 
   return (
     <>
@@ -188,7 +151,7 @@ const UpdateProfile = ({
             name="email"
             rules={[
               { required: true, message: "Vui lòng nhập email!" },
-              { type: "email", message: "Email không hợp lệ!" },
+              { type: "email" },
             ]}
           >
             <Input placeholder="Nhập email" />
@@ -223,19 +186,7 @@ const UpdateProfile = ({
             </Select>
           </Form.Item>
 
-          {notification && (
-            <div style={{ marginBottom: "8px" }}>
-              <span
-                style={{
-                  color:
-                    notification.type === "success" ? "#52c41a" : "#ff4d4f",
-                  fontSize: "12px",
-                }}
-              >
-                {notification.message}
-              </span>
-            </div>
-          )}
+          {renderNotification()}
 
           <Form.Item>
             <Space>
@@ -246,12 +197,9 @@ const UpdateProfile = ({
                 style={{
                   backgroundColor: "#1890ff",
                   color: "white",
-                  fontWeight: "500",
+                  fontWeight: 500,
                 }}
-                onClick={() => {
-                  console.log("Mở modal đổi mật khẩu");
-                  setChangePasswordModalVisible(true);
-                }}
+                onClick={() => setChangePasswordModalVisible(true)}
               >
                 Đổi mật khẩu
               </Button>
@@ -280,7 +228,7 @@ const UpdateProfile = ({
             name="newPassword"
             rules={[
               { required: true, message: "Vui lòng nhập mật khẩu mới!" },
-              { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
+              { min: 6 },
             ]}
           >
             <Input.Password placeholder="Nhập mật khẩu mới" />
@@ -289,16 +237,16 @@ const UpdateProfile = ({
           <Form.Item
             label="Xác nhận mật khẩu"
             name="confirmPassword"
+            dependencies={["newPassword"]}
             rules={[
               { required: true, message: "Vui lòng xác nhận mật khẩu!" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
-                  if (!value || getFieldValue("newPassword") === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("Mật khẩu xác nhận không khớp!")
-                  );
+                  return !value || getFieldValue("newPassword") === value
+                    ? Promise.resolve()
+                    : Promise.reject(
+                        new Error("Mật khẩu xác nhận không khớp!")
+                      );
                 },
               }),
             ]}
@@ -306,19 +254,7 @@ const UpdateProfile = ({
             <Input.Password placeholder="Xác nhận mật khẩu" />
           </Form.Item>
 
-          {notification && (
-            <div style={{ marginBottom: "8px" }}>
-              <span
-                style={{
-                  color:
-                    notification.type === "success" ? "#52c41a" : "#ff4d4f",
-                  fontSize: "12px",
-                }}
-              >
-                {notification.message}
-              </span>
-            </div>
-          )}
+          {renderNotification()}
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
