@@ -53,15 +53,12 @@ const UpdateProfile = ({
       }
 
       const payload = {
-        id: profile?.id || 0,
+        ...profile,
         ...values,
         birthday: values.birthday ? values.birthday.format("YYYY-MM-DD") : null,
       };
 
-      const res = await http.put(`/api/users/${profile.id}`, {
-        ...profile,
-        ...values,
-      });
+      const res = await http.put(`/api/users/${profile.id}`, payload);
       if (res.data.statusCode === 200) {
         handleNotification(
           "success",

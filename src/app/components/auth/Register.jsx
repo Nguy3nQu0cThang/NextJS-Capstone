@@ -3,20 +3,42 @@
 import React from "react";
 import { Form, Input, Button, Select, message, DatePicker } from "antd";
 import { http } from "app/utils/setting";
+import { useAuth } from "app/context/AuthContext";
+
 
 const { Option } = Select;
 
+
 const Register = ({ onSuccess }) => {
   const [form] = Form.useForm();
+  const { login } = useAuth(); 
 
   const onFinish = async (values) => {
     try {
-      const { confirmPassword, ...userData } = values;
+      const { confirmPassword, ...rest } = values;
+      const userData = {
+        ...rest,
+        birthday: rest.birthday?.format("YYYY-MM-DD"),
+      };
 
-      const response = await http.post("/api/auth/signup", userData);
-      message.success("Đăng ký thành công!");
-      form.resetFields();
-      onSuccess({ switchToLogin: true });
+      const res = await http.post("/api/auth/signup", userData);
+
+      if (res.data.statusCode === 201) {
+        const { token, user } = res.data.content;
+
+        // Lưu token và user vào localStorage
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // Cập nhật context nếu có
+        if (typeof login === "function") {
+          await login(user.email, token, user);
+        }
+
+        message.success("Đăng ký thành công!");
+        form.resetFields();
+        onSuccess(); // chuyển sang trang chính hoặc đóng modal
+      }
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Đăng ký thất bại!";
       message.error(errorMsg);

@@ -16,8 +16,9 @@ const Login = ({ onSuccess }) => {
 
       if (content?.token) {
         const username = content.email || values.email;
+        const profile = content.user || null; // <-- thêm dòng này nếu có trả về user profile
 
-        await login(username, content.token);
+        await login(username, content.token, profile); // <-- truyền thêm profile vào
         message.success("Đăng nhập thành công!");
         form.resetFields();
         onSuccess(username);
@@ -29,6 +30,7 @@ const Login = ({ onSuccess }) => {
       message.error(errorMsg);
     }
   };
+  
 
   return (
     <div style={{ maxWidth: 400, margin: "0 auto", padding: "15px 0" }}>

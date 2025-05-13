@@ -2,17 +2,21 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Avatar, Descriptions, Alert, Spin, Button, message } from "antd";
+import { Card, Avatar, Descriptions, Alert, Spin, Button, message, Modal } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useAuth } from "app/context/AuthContext";
 import { http } from "app/utils/setting";
 import UpdateProfile from "app/components/User/UpdateProfile";
 import AvatarUpload from "app/components/User/AvatarUpload";
+import { deleteAccount } from "app/services/userService";
 
 const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
   const router = useRouter();
 
   const {
@@ -24,50 +28,56 @@ const UserProfile = () => {
     isCheckingAuth,
   } = useAuth();
 
+  // Load lại userProfile từ localStorage nếu chưa có trong context
+  useEffect(() => {
+    if (!userProfile?.id) {
+      const storedProfile = localStorage.getItem("userProfile");
+      if (storedProfile) {
+        try {
+          const parsedProfile = JSON.parse(storedProfile);
+          if (parsedProfile?.id) {
+            setUserProfile(parsedProfile);
+          }
+        } catch (err) {
+          console.error("Lỗi khi parse userProfile từ localStorage:", err);
+        }
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const getProfileAPI = async () => {
       setLoading(true);
-
-      const isAuthenticated = await checkAuthState();
-      if (!isAuthenticated) return router.push("/");
-
-      // Tránh gọi API nếu đã có userProfile khớp với userName
-      if (userProfile?.email?.toLowerCase() === userName?.toLowerCase()) {
+      if (!userProfile?.id) {
+        setError("Không tìm thấy ID người dùng.");
         setLoading(false);
         return;
       }
+
+      const isAuthenticated = await checkAuthState();
+      if (!isAuthenticated) return router.push("/");
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       try {
-        const res = await http.get("/api/users", { signal: controller.signal });
+        const res = await http.get(
+          `https://airbnbnew.cybersoft.edu.vn/api/users/${userProfile.id}`,
+          { signal: controller.signal }
+        );
         const { statusCode, content } = res.data;
 
-        if (statusCode === 200 && Array.isArray(content)) {
-          const found = content.find(
-            (u) => u.email.toLowerCase() === userName.toLowerCase()
-          );
-
-          if (found) {
-            const current = JSON.stringify(userProfile);
-            const updated = JSON.stringify(found);
-            if (current !== updated) {
-              setUserProfile(found);
-              localStorage.setItem("userProfile", updated);
-            }
-          } else {
-            setError(`Không tìm thấy hồ sơ cho email: ${userName}`);
-          }
+        if (statusCode === 200) {
+          setUserProfile(content);
+          localStorage.setItem("userProfile", JSON.stringify(content));
         } else {
-          setError("Không có thông tin hồ sơ để hiển thị.");
+          setError("Không thể lấy thông tin hồ sơ.");
         }
       } catch (err) {
-        console.error("Get profile error:", err.response?.data || err.message);
         setError(
           err.name === "AbortError"
             ? "Yêu cầu quá lâu, vui lòng thử lại."
-            : null
+            : "Lỗi khi lấy hồ sơ."
         );
         if (err.name !== "AbortError") router.push("/");
       } finally {
@@ -76,8 +86,16 @@ const UserProfile = () => {
       }
     };
 
-    if (userName) getProfileAPI();
-  }, [userName]);
+    if (userProfile?.id && loading) {
+      getProfileAPI();
+    }
+  }, [userProfile?.id, loading]);
+
+  const handleDeleteAccount = () => {
+    console.log("Test button");
+    setConfirmVisible(true);
+  };
+  
 
   const refreshProfile = async () => {
     setLoading(true);
@@ -94,7 +112,10 @@ const UserProfile = () => {
         }
       }
     } catch (err) {
-      console.error("Refresh profile error:", err.response?.data || err.message);
+      console.error(
+        "Refresh profile error:",
+        err.response?.data || err.message
+      );
       message.error("Lỗi khi làm mới hồ sơ.");
     } finally {
       setLoading(false);
@@ -114,7 +135,6 @@ const UserProfile = () => {
     setModalVisible(true);
   };
 
-  // UI khi đang tải hoặc xác thực
   if (isCheckingAuth || loading) {
     return (
       <div style={{ textAlign: "center", margin: "50px 0" }}>
@@ -124,12 +144,10 @@ const UserProfile = () => {
     );
   }
 
-  // UI khi lỗi
   if (error) {
     return <Alert message={error} type="error" style={{ margin: "20px" }} />;
   }
 
-  // UI khi không có profile
   if (!userProfile) {
     return (
       <Alert
@@ -202,6 +220,8 @@ const UserProfile = () => {
               danger
               shape="round"
               style={{ fontWeight: "500", height: "36px" }}
+              loading={deleting}
+              onClick={handleDeleteAccount} // Gọi hàm xóa tài khoản
             >
               Xóa tài khoản
             </Button>
@@ -229,13 +249,43 @@ const UserProfile = () => {
 
       {modalVisible && (
         <UpdateProfile
-          visible={modalVisible}
+          open={modalVisible}
           onCancel={() => setModalVisible(false)}
           profile={userProfile}
           onSuccess={handleUpdateSuccess}
           showModal={showModal}
         />
       )}
+
+      <Modal
+        title="Xác nhận xóa tài khoản"
+        open={confirmVisible}
+        onOk={async () => {
+          console.log("test API");
+          try {
+            setDeleting(true);
+            await deleteAccount(userProfile.id);
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("tokenExpiry");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userProfile");
+            setUserProfile(null); 
+            message.success("Tài khoản đã được xóa thành công.");
+            router.push("/");
+          } catch (error) {
+            message.error(error.message || "Đã có lỗi xảy ra.");
+          } finally {
+            setDeleting(false);
+            setConfirmVisible(false);
+          }
+        }}
+        onCancel={() => setConfirmVisible(false)}
+        okText="Xóa"
+        cancelText="Hủy"
+        confirmLoading={deleting}
+      >
+        <p>Bạn có chắc chắn muốn xóa tài khoản này không?</p>
+      </Modal>
     </div>
   );
 };
