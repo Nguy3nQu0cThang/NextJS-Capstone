@@ -20,45 +20,40 @@ const AvatarUpload = ({ userProfile, setUserProfile, refreshProfile }) => {
       message.error("Hình ảnh phải nhỏ hơn 2MB!");
       return false;
     }
-    setFileList([file]);
-    return false; // Ngăn upload tự động
+
+    console.log("Selected file:", file); // Kiểm tra file đã được chọn
+    setFileList([file]); // Chỉ cần cập nhật file list
+    return false; // Ngăn upload mặc định và thực hiện customRequest
   };
+  
 
   const handleUpload = async (options) => {
+    console.log("Custom request triggered", options); // Xem options có được truyền vào không
+
     const { file } = options;
+    console.log("File to upload:", file); // Kiểm tra file
+
     const formData = new FormData();
     formData.append("formFile", file);
     formData.append("id", userProfile.id);
 
+    console.log("Form data prepared:", formData);
+
     setUploading(true);
     try {
-      console.log("Uploading avatar for ID:", userProfile.id);
-      console.log("File name:", file.name);
       const res = await http.post("/api/users/upload-avatar", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log("Upload API response:", JSON.stringify(res.data, null, 2));
-      if (res.data.statusCode === 200) {
-        const avatarUrl = res.data.content.avatar || res.data.content.url || ""; // Điều chỉnh dựa trên response
-        const updatedProfile = { ...userProfile, avatar: avatarUrl };
-        setUserProfile(updatedProfile);
-        localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-        message.success("Tải lên avatar thành công!");
-        setFileList([]);
-        // Gọi lại API để lấy dữ liệu mới
-        if (refreshProfile) refreshProfile();
-      } else {
-        message.error("Tải lên avatar thất bại.");
-      }
+      console.log("API response:", res); // Kiểm tra phản hồi API
     } catch (err) {
       console.error("Upload error:", err.response?.data || err.message);
-      message.error(
-        `Tải lên avatar thất bại: ${err.response?.data?.message || err.message}`
-      );
     } finally {
       setUploading(false);
+      console.log("Upload process finished.");
     }
   };
+  
+  
 
   return (
     <Upload

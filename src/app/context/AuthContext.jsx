@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { message } from "antd";
 import { http } from "app/utils/setting";
 
@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
   const [authFailed, setAuthFailed] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
+  const pathname = usePathname(); // ✅ Fix lỗi router.pathname
 
   const showModal = (mode) => {
     setModalMode(mode);
@@ -58,20 +59,28 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
 
+      // Ưu tiên dùng userProfile trong localStorage nếu hợp lệ
       if (storedProfile) {
-        const profile = JSON.parse(storedProfile);
-        if (Array.isArray(profile)) {
+        try {
+          const profile = JSON.parse(storedProfile);
+          if (
+            profile &&
+            profile.email &&
+            profile.email.toLowerCase() === storedUserName.toLowerCase()
+          ) {
+            setUserProfile(profile);
+            setUserName(storedUserName);
+            setIsLoggedIn(true);
+            return true;
+          } else {
+            localStorage.removeItem("userProfile"); // Xóa nếu không hợp lệ
+          }
+        } catch {
           localStorage.removeItem("userProfile");
-        } else if (
-          profile.email.toLowerCase() === storedUserName.toLowerCase()
-        ) {
-          setUserProfile(profile);
-          setUserName(storedUserName);
-          setIsLoggedIn(true);
-          return true;
         }
       }
 
+      // Nếu không có profile hoặc không hợp lệ thì gọi API
       const res = await http.get("/api/users");
       if (res.data.statusCode === 200 && Array.isArray(res.data.content)) {
         const profile = res.data.content.find(
@@ -131,12 +140,12 @@ export const AuthProvider = ({ children }) => {
   }, [router]);
 
   useEffect(() => {
-    if (authFailed && router.pathname === "/") {
+    if (authFailed && pathname === "/") {
       showModal("login");
     }
-  }, [authFailed, router.pathname]);
+  }, [authFailed, pathname]);
 
-  const login = async (username, token) => {
+  const login = async (username, token, profile = null) => {
     try {
       if (!token || token.split(".").length !== 3) {
         throw new Error("Invalid token format");
@@ -147,24 +156,15 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("tokenExpiry", expiry.toString());
       localStorage.setItem("userName", username);
 
-      const res = await http.get("/api/users");
-      if (res.data.statusCode === 200 && Array.isArray(res.data.content)) {
-        const profile = res.data.content.find(
-          (user) => user.email.toLowerCase() === username.toLowerCase()
-        );
-        if (profile) {
-          setUserProfile(profile);
-          localStorage.setItem("userProfile", JSON.stringify(profile));
-          setUserName(username);
-          setIsLoggedIn(true);
-          message.success("Đăng nhập thành công!");
-          return true;
-        } else {
-          throw new Error("User not found in response");
-        }
-      } else {
-        throw new Error("Invalid users data");
+      if (profile) {
+        setUserProfile(profile);
+        localStorage.setItem("userProfile", JSON.stringify(profile));
       }
+
+      setUserName(username);
+      setIsLoggedIn(true);
+      message.success("Đăng nhập thành công!");
+      return true;
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
       clearAuthData();
@@ -175,6 +175,7 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
   };
+  
 
   const logout = () => {
     clearAuthData();
