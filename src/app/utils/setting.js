@@ -28,7 +28,7 @@ export function deleteCookie(name) {
   document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 }
 
-export const DOMAIN = "https://apistore.cybersoft.edu.vn";
+export const DOMAIN = "https://airbnbnew.cybersoft.edu.vn";
 export const TOKEN_CYBERSOFT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0";
 
@@ -63,7 +63,7 @@ http.interceptors.response.use(
         if (isExpired) {
           try {
             const response = await axios.post(
-              `${DOMAIN}/api/Users/RefeshToken`,
+              'https://apistore.cybersoft.edu.vn/api/Users/RefeshToken',
               {},
               {
                 headers: {

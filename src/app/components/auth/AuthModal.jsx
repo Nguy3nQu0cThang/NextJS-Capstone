@@ -7,14 +7,21 @@ import dynamic from "next/dynamic";
 const Login = dynamic(() => import("./Login"), { ssr: false });
 const Register = dynamic(() => import("./Register"), { ssr: false });
 
-const AuthModal = ({
-  isModalOpen,
-  modalMode,
-  handleCancel,
-  setIsModalOpen,
-  setModalMode,
-}) => {
-    return (
+const AuthModal = ({ isModalOpen, modalMode, handleCancel, setModalMode }) => {
+  const handleSuccessLogin = () => {
+    handleCancel(); // Đóng modal
+  };
+
+  const handleSuccessRegister = (options) => {
+    handleCancel(); // Đóng modal
+    if (options?.switchToLogin) {
+      setTimeout(() => {
+        setModalMode("login");
+      }, 0);
+    }
+  };
+
+  return (
     <Modal
       title={modalMode === "login" ? "Đăng nhập" : "Đăng ký"}
       open={isModalOpen}
@@ -23,23 +30,9 @@ const AuthModal = ({
       destroyOnClose
     >
       {modalMode === "login" ? (
-        <Login
-          onSuccess={(username) => {
-            setIsModalOpen(false);
-          }}
-        />
+        <Login onSuccess={handleSuccessLogin} />
       ) : (
-        <Register
-          onSuccess={(options) => {
-            setIsModalOpen(false);
-            if (options.switchToLogin) {
-              setTimeout(() => {
-                setModalMode("login");
-                setIsModalOpen(true);
-              }, 0);
-            }
-          }}
-        />
+        <Register onSuccess={handleSuccessRegister} />
       )}
     </Modal>
   );

@@ -1,6 +1,9 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Select, Button, Space } from "antd";
+import { Modal, Form, Input, Select, Button, Space, DatePicker } from "antd";
 import { http } from "app/utils/setting";
+import dayjs from "dayjs";
 
 const { Option } = Select;
 
@@ -12,9 +15,6 @@ const UpdateProfile = ({
   showModal,
 }) => {
   const [form] = Form.useForm();
-  const [passwordForm] = Form.useForm();
-  const [changePasswordModalVisible, setChangePasswordModalVisible] =
-    useState(false);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
@@ -23,6 +23,7 @@ const UpdateProfile = ({
         email: profile.email,
         name: profile.name,
         phone: profile.phone,
+        birthday: profile.birthday ? dayjs(profile.birthday) : null,
         gender: profile.gender,
       });
     }
@@ -54,13 +55,13 @@ const UpdateProfile = ({
       const payload = {
         id: profile?.id || 0,
         ...values,
+        birthday: values.birthday ? values.birthday.format("YYYY-MM-DD") : null,
       };
 
-      const res = await http.post(
-        "https://apistore.cybersoft.edu.vn/api/Users/updateProfile",
-        payload
-      );
-
+      const res = await http.put(`/api/users/${profile.id}`, {
+        ...profile,
+        ...values,
+      });
       if (res.data.statusCode === 200) {
         handleNotification(
           "success",
@@ -74,44 +75,6 @@ const UpdateProfile = ({
         }, 3000);
       } else {
         handleNotification("error", "Cập nhật hồ sơ thất bại!");
-      }
-    } catch (error) {
-      handleError(error, true);
-    }
-  };
-
-  const onChangePasswordFinish = async ({ newPassword, confirmPassword }) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        handleNotification("error", "Vui lòng đăng nhập để đổi mật khẩu.");
-        showModal("login");
-        setChangePasswordModalVisible(false);
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        handleNotification("error", "Mật khẩu xác nhận không khớp!");
-        return;
-      }
-
-      const res = await http.post(
-        "https://apistore.cybersoft.edu.vn/api/Users/changePassword",
-        { newPassword }
-      );
-
-      if (res.data.statusCode === 200) {
-        handleNotification(
-          "success",
-          "Mật khẩu của bạn đã được thay đổi thành công!"
-        );
-        passwordForm.resetFields();
-        setTimeout(() => {
-          setNotification(null);
-          setChangePasswordModalVisible(false);
-        }, 3000);
-      } else {
-        handleNotification("error", "Đổi mật khẩu thất bại!");
       }
     } catch (error) {
       handleError(error, true);
@@ -133,137 +96,84 @@ const UpdateProfile = ({
     );
 
   return (
-    <>
-      <Modal
-        title="Cập nhật hồ sơ"
-        open={visible}
-        onCancel={onCancel}
-        footer={null}
+    <Modal
+      title="Cập nhật hồ sơ"
+      open={visible}
+      onCancel={onCancel}
+      footer={null}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{ gender: true }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={{ gender: true }}
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: "Vui lòng nhập email!" },
+            { type: "email" },
+          ]}
         >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Vui lòng nhập email!" },
-              { type: "email" },
-            ]}
-          >
-            <Input placeholder="Nhập email" />
-          </Form.Item>
+          <Input placeholder="Nhập email" />
+        </Form.Item>
 
-          <Form.Item
-            label="Tên"
-            name="name"
-            rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
-          >
-            <Input placeholder="Nhập họ tên" />
-          </Form.Item>
-
-          <Form.Item
-            label="Số điện thoại"
-            name="phone"
-            rules={[
-              { required: true, message: "Vui lòng nhập số điện thoại!" },
-            ]}
-          >
-            <Input placeholder="Nhập số điện thoại" />
-          </Form.Item>
-
-          <Form.Item
-            label="Giới tính"
-            name="gender"
-            rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
-          >
-            <Select>
-              <Option value={true}>Nam</Option>
-              <Option value={false}>Nữ</Option>
-            </Select>
-          </Form.Item>
-
-          {renderNotification()}
-
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                Cập nhật
-              </Button>
-              <Button
-                style={{
-                  backgroundColor: "#1890ff",
-                  color: "white",
-                  fontWeight: 500,
-                }}
-                onClick={() => setChangePasswordModalVisible(true)}
-              >
-                Đổi mật khẩu
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="Đổi mật khẩu"
-        open={changePasswordModalVisible}
-        onCancel={() => {
-          passwordForm.resetFields();
-          setChangePasswordModalVisible(false);
-        }}
-        footer={null}
-        width={400}
-      >
-        <Form
-          form={passwordForm}
-          layout="vertical"
-          onFinish={onChangePasswordFinish}
+        <Form.Item
+          label="Tên"
+          name="name"
+          rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
         >
-          <Form.Item
-            label="Mật khẩu mới"
-            name="newPassword"
-            rules={[
-              { required: true, message: "Vui lòng nhập mật khẩu mới!" },
-              { min: 6 },
-            ]}
-          >
-            <Input.Password placeholder="Nhập mật khẩu mới" />
-          </Form.Item>
+          <Input placeholder="Nhập họ tên" />
+        </Form.Item>
 
-          <Form.Item
-            label="Xác nhận mật khẩu"
-            name="confirmPassword"
-            dependencies={["newPassword"]}
-            rules={[
-              { required: true, message: "Vui lòng xác nhận mật khẩu!" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  return !value || getFieldValue("newPassword") === value
-                    ? Promise.resolve()
-                    : Promise.reject(
-                        new Error("Mật khẩu xác nhận không khớp!")
-                      );
-                },
-              }),
-            ]}
-          >
-            <Input.Password placeholder="Xác nhận mật khẩu" />
-          </Form.Item>
+        <Form.Item
+          label="Số điện thoại"
+          name="phone"
+          rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
+        >
+          <Input placeholder="Nhập số điện thoại" />
+        </Form.Item>
 
-          {renderNotification()}
+        <Form.Item
+          label="Ngày sinh"
+          name="birthday"
+          rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
+        >
+          <DatePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
+        </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              Xác nhận
+        <Form.Item
+          label="Giới tính"
+          name="gender"
+          rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
+        >
+          <Select>
+            <Option value={true}>Nam</Option>
+            <Option value={false}>Nữ</Option>
+          </Select>
+        </Form.Item>
+
+        {renderNotification()}
+
+        <Form.Item>
+          <Space>
+            <Button type="primary" htmlType="submit">
+              Cập nhật
             </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </>
+            <Button
+              style={{
+                backgroundColor: "#1890ff",
+                color: "white",
+                fontWeight: 500,
+              }}
+            >
+              Đổi mật khẩu
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

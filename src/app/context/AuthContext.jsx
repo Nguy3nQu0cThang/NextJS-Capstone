@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
 import { http } from "app/utils/setting";
@@ -14,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
   const [authFailed, setAuthFailed] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Thêm state
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
 
   const showModal = (mode) => {
@@ -27,66 +33,69 @@ export const AuthProvider = ({ children }) => {
     setAuthFailed(false);
   };
 
-  const checkAuthState = async () => {
+  const clearAuthData = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("tokenExpiry");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userProfile");
+  };
+
+  const checkAuthState = useCallback(async () => {
     try {
-      console.log("Checking auth state...");
       const token = localStorage.getItem("accessToken");
       const expiry = localStorage.getItem("tokenExpiry");
       const storedUserName = localStorage.getItem("userName");
       const storedProfile = localStorage.getItem("userProfile");
 
-      console.log("Token:", token);
-      console.log("Expiry:", expiry);
-      console.log("Stored UserName:", storedUserName);
-      console.log("Stored Profile:", storedProfile);
-
-      if (!token || !expiry || !storedUserName || !storedProfile) {
-        console.log("Missing token or user data");
+      if (
+        !token ||
+        token.split(".").length !== 3 ||
+        !expiry ||
+        !storedUserName ||
+        new Date().getTime() >= parseInt(expiry)
+      ) {
+        clearAuthData();
         return false;
       }
 
-      const now = new Date().getTime();
-      if (now >= parseInt(expiry)) {
-        console.log("Token expired");
-        return false;
+      if (storedProfile) {
+        const profile = JSON.parse(storedProfile);
+        if (Array.isArray(profile)) {
+          localStorage.removeItem("userProfile");
+        } else if (
+          profile.email.toLowerCase() === storedUserName.toLowerCase()
+        ) {
+          setUserProfile(profile);
+          setUserName(storedUserName);
+          setIsLoggedIn(true);
+          return true;
+        }
       }
 
-      // Gọi API để xác minh token
-      const res = await http.post("/api/Users/getProfile", {});
-      console.log("API response:", res.data);
-
-      if (res.data.statusCode !== 200 || !res.data.content) {
-        console.log("Invalid profile data");
-        return false;
-      }
-
-      const profile = res.data.content;
-      console.log("User profile:", profile);
-
-      // Giải mã token để lấy userName (nếu cần)
-      try {
-        const user = JSON.parse(atob(token.split(".")[1]));
-        setUserName(
-          user[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-          ] || storedUserName
+      const res = await http.get("/api/users");
+      if (res.data.statusCode === 200 && Array.isArray(res.data.content)) {
+        const profile = res.data.content.find(
+          (user) => user.email.toLowerCase() === storedUserName.toLowerCase()
         );
-      } catch (error) {
-        console.error("Lỗi giải mã token:", error);
-        setUserName(storedUserName);
+        if (profile) {
+          setUserProfile(profile);
+          setUserName(storedUserName);
+          localStorage.setItem("userProfile", JSON.stringify(profile));
+          setIsLoggedIn(true);
+          return true;
+        }
       }
 
-      setUserProfile(profile);
-      localStorage.setItem("userProfile", JSON.stringify(profile));
-      setIsLoggedIn(true);
-      return true;
+      clearAuthData();
+      return false;
     } catch (err) {
-      console.error("Check auth error:", err);
+      console.error("Check auth error:", err.response?.data || err.message);
+      clearAuthData();
       return false;
     } finally {
       setIsCheckingAuth(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,10 +103,6 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       const isValid = await checkAuthState();
       if (isMounted && !isValid) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("tokenExpiry");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userProfile");
         setIsLoggedIn(false);
         setUserName("");
         setUserProfile(null);
@@ -109,21 +114,18 @@ export const AuthProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [checkAuthState]);
 
   useEffect(() => {
     const handleAuthFailed = () => {
-      console.log("Received authFailed event");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("tokenExpiry");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userProfile");
+      clearAuthData();
       setIsLoggedIn(false);
       setUserName("");
       setUserProfile(null);
       setAuthFailed(true);
       router.push("/");
     };
+
     window.addEventListener("authFailed", handleAuthFailed);
     return () => window.removeEventListener("authFailed", handleAuthFailed);
   }, [router]);
@@ -136,29 +138,36 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, token) => {
     try {
+      if (!token || token.split(".").length !== 3) {
+        throw new Error("Invalid token format");
+      }
+
       const expiry = new Date().getTime() + 24 * 60 * 60 * 1000;
       localStorage.setItem("accessToken", token);
       localStorage.setItem("tokenExpiry", expiry.toString());
       localStorage.setItem("userName", username);
 
-      const res = await http.post("/api/Users/getProfile", {});
-      console.log("Login getProfile response:", res.data);
-      if (res.data.statusCode === 200 && res.data.content) {
-        setUserProfile(res.data.content);
-        localStorage.setItem("userProfile", JSON.stringify(res.data.content));
-        setIsLoggedIn(true);
-        setUserName(username);
-        message.success("Đăng nhập thành công!");
-        return true;
+      const res = await http.get("/api/users");
+      if (res.data.statusCode === 200 && Array.isArray(res.data.content)) {
+        const profile = res.data.content.find(
+          (user) => user.email.toLowerCase() === username.toLowerCase()
+        );
+        if (profile) {
+          setUserProfile(profile);
+          localStorage.setItem("userProfile", JSON.stringify(profile));
+          setUserName(username);
+          setIsLoggedIn(true);
+          message.success("Đăng nhập thành công!");
+          return true;
+        } else {
+          throw new Error("User not found in response");
+        }
       } else {
-        throw new Error("Không thể lấy thông tin hồ sơ.");
+        throw new Error("Invalid users data");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("tokenExpiry");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userProfile");
+      console.error("Login error:", err.response?.data || err.message);
+      clearAuthData();
       setIsLoggedIn(false);
       setUserName("");
       setUserProfile(null);
@@ -168,10 +177,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("tokenExpiry");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userProfile");
+    clearAuthData();
     setIsLoggedIn(false);
     setUserName("");
     setUserProfile(null);
@@ -197,7 +203,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         checkAuthState,
-        isCheckingAuth, // Thêm vào context
+        isCheckingAuth,
       }}
     >
       {children}

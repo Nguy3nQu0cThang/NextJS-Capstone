@@ -1,29 +1,25 @@
 "use client";
 
 import React from "react";
-import { Form, Input, Button, Select, message } from "antd";
+import { Form, Input, Button, Select, message, DatePicker } from "antd";
 import { http } from "app/utils/setting";
 
 const { Option } = Select;
 
 const Register = ({ onSuccess }) => {
   const [form] = Form.useForm();
-  console.log("Form instance created in Register:", form);
+
   const onFinish = async (values) => {
     try {
       const { confirmPassword, ...userData } = values;
-      console.log("Bắt đầu đăng ký với dữ liệu:", userData);
 
-      const res = await http.post("/api/Users/signup", userData);
-      console.log("Đăng ký thành công, response:", res.data);
-
+      const response = await http.post("/api/auth/signup", userData);
       message.success("Đăng ký thành công!");
       form.resetFields();
-      console.log("Gọi onSuccess với switchToLogin: true");
       onSuccess({ switchToLogin: true });
     } catch (error) {
-      console.error("Đăng ký thất bại:", error.response?.data || error.message);
-      message.error(error.response?.data?.message || "Đăng ký thất bại!");
+      const errorMsg = error.response?.data?.message || "Đăng ký thất bại!";
+      message.error(errorMsg);
     }
   };
 
@@ -61,12 +57,9 @@ const Register = ({ onSuccess }) => {
             { required: true, message: "Vui lòng nhập lại mật khẩu!" },
             ({ getFieldValue }) => ({
               validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(
-                  new Error("Mật khẩu nhập lại không khớp!")
-                );
+                return !value || getFieldValue("password") === value
+                  ? Promise.resolve()
+                  : Promise.reject(new Error("Mật khẩu nhập lại không khớp!"));
               },
             }),
           ]}
@@ -88,6 +81,14 @@ const Register = ({ onSuccess }) => {
           rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
         >
           <Input placeholder="Nhập số điện thoại" />
+        </Form.Item>
+
+        <Form.Item
+          label="Ngày sinh"
+          name="birthday"
+          rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
+        >
+          <DatePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
         </Form.Item>
 
         <Form.Item label="Giới tính" name="gender" initialValue={true}>

@@ -8,29 +8,25 @@ import { useAuth } from "app/context/AuthContext";
 const Login = ({ onSuccess }) => {
   const [form] = Form.useForm();
   const { login } = useAuth();
-  console.log("Form instance created in Login:", form);
 
   const onFinish = async (values) => {
     try {
-      console.log("Bắt đầu đăng nhập với dữ liệu:", values);
-      const res = await http.post("/api/Users/signin", values);
-      console.log("Đăng nhập thành công, response:", res.data);
+      const response = await http.post("/api/auth/signin", values);
+      const { content } = response.data;
 
-      const token = res.data.content.accessToken;
-      const username = res.data.content.email || values.email;
+      if (content?.token) {
+        const username = content.email || values.email;
 
-      await login(username, token);
-      message.success("Đăng nhập thành công!");
-      console.log("Đã gọi message.success cho đăng nhập");
-      form.resetFields();
-      onSuccess(username);
+        await login(username, content.token);
+        message.success("Đăng nhập thành công!");
+        form.resetFields();
+        onSuccess(username);
+      } else {
+        throw new Error("Không tìm thấy token trong phản hồi.");
+      }
     } catch (error) {
-      console.error(
-        "Đăng nhập thất bại:",
-        error.response?.data || error.message
-      );
-      message.error(error.response?.data?.message || "Đăng nhập thất bại!");
-      console.log("Đã gọi message.error cho đăng nhập thất bại");
+      const errorMsg = error.response?.data?.message || "Đăng nhập thất bại!";
+      message.error(errorMsg);
     }
   };
 
