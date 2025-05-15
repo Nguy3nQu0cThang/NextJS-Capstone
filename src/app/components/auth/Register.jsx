@@ -1,47 +1,65 @@
 "use client";
 
-import React from "react";
-import { Form, Input, Button, Select, message, DatePicker } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Button, Modal, DatePicker, Select } from "antd";
 import { http } from "app/utils/setting";
-import { useAuth } from "app/context/AuthContext";
-
 
 const { Option } = Select;
 
-
 const Register = ({ onSuccess }) => {
   const [form] = Form.useForm();
-  const { login } = useAuth(); 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [registerStatus, setRegisterStatus] = useState(""); // "success" hoặc "error"
+  const [errorMessage, setErrorMessage] = useState(""); // Lưu thông báo lỗi
+  const [formValues, setFormValues] = useState(null);
 
   const onFinish = async (values) => {
     try {
       const { confirmPassword, ...rest } = values;
-      const userData = {
-        ...rest,
-        birthday: rest.birthday?.format("YYYY-MM-DD"),
-      };
+      const userData = { ...rest };
+
+      console.log("Submitting values:", userData);
 
       const res = await http.post("/api/auth/signup", userData);
+      console.log("API response:", res.data);
 
-      if (res.data.statusCode === 201) {
-        const { token, user } = res.data.content;
-
-        // Lưu token và user vào localStorage
-        localStorage.setItem("accessToken", token);
-        localStorage.setItem("user", JSON.stringify(user));
-
-        // Cập nhật context nếu có
-        if (typeof login === "function") {
-          await login(user.email, token, user);
-        }
-
-        message.success("Đăng ký thành công!");
+      if (res.data.statusCode === 200) {
+        setFormValues({ email: values.email, password: values.password });
+        localStorage.setItem("userName", values.email);
+        localStorage.setItem("tempPassword", values.password);
+        setRegisterStatus("success");
+        setIsModalVisible(true);
         form.resetFields();
-        onSuccess(); // chuyển sang trang chính hoặc đóng modal
+      } else {
+        throw new Error("Đăng ký thất bại!");
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Đăng ký thất bại!";
-      message.error(errorMsg);
+      console.error("Register error:", error.response?.data || error.message);
+      let errorMsg = "Đăng ký thất bại!";
+      if (error.response?.data) {
+        errorMsg =
+          error.response.data.content ||
+          error.response.data.message ||
+          errorMsg;
+      }
+      setErrorMessage(errorMsg);
+      setRegisterStatus("error");
+      setIsModalVisible(true);
+    }
+  };
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+    if (
+      registerStatus === "success" &&
+      typeof onSuccess === "function" &&
+      formValues
+    ) {
+      onSuccess({
+        switchToLogin: true,
+        email: formValues.email,
+        password: formValues.password,
+      });
     }
   };
 
@@ -51,10 +69,7 @@ const Register = ({ onSuccess }) => {
         <Form.Item
           label="Email"
           name="email"
-          rules={[
-            { required: true, message: "Vui lòng nhập email!" },
-            { type: "email", message: "Email không hợp lệ!" },
-          ]}
+          rules={[{ required: true, message: "Vui lòng nhập email!" }]}
         >
           <Input placeholder="Nhập email" />
         </Form.Item>
@@ -62,10 +77,7 @@ const Register = ({ onSuccess }) => {
         <Form.Item
           label="Mật khẩu"
           name="password"
-          rules={[
-            { required: true, message: "Vui lòng nhập mật khẩu!" },
-            { min: 6, message: "Mật khẩu tối thiểu 6 ký tự!" },
-          ]}
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
         >
           <Input.Password placeholder="Nhập mật khẩu" />
         </Form.Item>
@@ -79,9 +91,10 @@ const Register = ({ onSuccess }) => {
             { required: true, message: "Vui lòng nhập lại mật khẩu!" },
             ({ getFieldValue }) => ({
               validator(_, value) {
-                return !value || getFieldValue("password") === value
-                  ? Promise.resolve()
-                  : Promise.reject(new Error("Mật khẩu nhập lại không khớp!"));
+                if (!value || getFieldValue("password") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Mật khẩu không khớp!"));
               },
             }),
           ]}
@@ -131,6 +144,23 @@ const Register = ({ onSuccess }) => {
           </Button>
         </Form.Item>
       </Form>
+
+      <Modal
+        title="Thông báo"
+        open={isModalVisible}
+        onOk={handleOk}
+        onCancel={() => setIsModalVisible(false)}
+        okText="OK"
+        cancelText="Hủy"
+        okButtonProps={{ disabled: registerStatus === "error" }}
+        cancelButtonProps={{className: "custom-cancel-button"}}
+      >
+        <p style={{ color: registerStatus === "error" ? "red" : "green" }}>
+          {registerStatus === "success"
+            ? "Tài khoản của bạn đã được tạo. Vui lòng đăng nhập."
+            : `Đăng ký thất bại: ${errorMessage}`}
+        </p>
+      </Modal>
     </div>
   );
 };

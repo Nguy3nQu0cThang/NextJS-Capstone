@@ -55,3 +55,11 @@ a {
   margin-bottom: 10px !important;
 }
 
+.custom-cancel-button:hover,
+.custom-cancel-button:active,
+.custom-cancel-button:focus {
+  background-color: #ff4d4f !important;
+  color: white !important;
+  border-color: #ff4d4f !important;
+  transition: all 0.3s ease;
+}

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const TOKEN = "accessToken";
+export const TOKEN = "token";
 export const USER_LOGIN = "userLogin";
 
 export function setCookie(name, value, days) {
@@ -75,9 +75,9 @@ http.interceptors.response.use(
             console.log("RefreshToken Response:", response.data);
             if (
               response.data.statusCode === 200 &&
-              response.data.content?.accessToken
+              response.data.content?.token
             ) {
-              const newToken = response.data.content.accessToken;
+              const newToken = response.data.content.token;
               const newExpiry = new Date().getTime() + 24 * 60 * 60 * 1000; // 1 ngày
               localStorage.setItem(TOKEN, newToken);
               localStorage.setItem("tokenExpiry", newExpiry.toString());

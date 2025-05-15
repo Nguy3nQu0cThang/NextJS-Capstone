@@ -8,7 +8,7 @@ import { useAuth } from "app/context/AuthContext";
 
 const UserMenu = ({ isLoggedIn, userName, showModal }) => {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, userProfile } = useAuth();
 
   const handleMenuClick = ({ key }) => {
     if (key === "signup") {
@@ -24,12 +24,18 @@ const UserMenu = ({ isLoggedIn, userName, showModal }) => {
     } else if (key === "homepage") {
       router.push("/");
       console.log("Điều hướng đến trang chủ");
+    } else if (key === "admin") {
+      router.push("/admin");
+      console.log("Điều hướng đến trang quản lý");
     }
   };
 
   const menuItems = isLoggedIn
     ? [
         { label: "Trang chủ", key: "homepage" },
+        ...(userProfile?.role === "ADMIN"
+          ? [{ label: "Quản lý", key: "admin" }]
+          : []),
         { label: "Thông tin tài khoản", key: "account" },
         { label: "Đăng xuất", key: "logout", style: { color: "red" } },
       ]
@@ -50,7 +56,7 @@ const UserMenu = ({ isLoggedIn, userName, showModal }) => {
     >
       <span style={{ cursor: "pointer", fontSize: "14px" }}>Booking</span>
       <GlobalOutlined style={{ fontSize: "16px", cursor: "pointer" }} />
-      {userName && (
+      {isLoggedIn && userName && (
         <div
           style={{
             maxWidth: "150px",
