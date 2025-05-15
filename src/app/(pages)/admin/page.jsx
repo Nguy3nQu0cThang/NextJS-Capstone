@@ -8,7 +8,7 @@ import {
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import AdminUsersTable from "app/components/admin/AdminUsersTable"; // Thay UserAdmin bằng AdminUsersTable
+import AdminUsersTable from "app/components/admin/AdminUsersTable"; 
 import RoomAdmin from "app/components/admin/RoomAdmin";
 import DashBoard from "app/components/admin/DashBoard";
 import { useAuth } from "app/context/AuthContext";
@@ -20,7 +20,6 @@ const AdminPage = () => {
   const { isLoggedIn, isCheckingAuth, isModalOpen } = useAuth();
   const router = useRouter();
 
-  // Xử lý chuyển hướng khi không đăng nhập
   useEffect(() => {
     console.log("isCheckingAuth:", isCheckingAuth);
     console.log("isLoggedIn:", isLoggedIn);
@@ -57,12 +56,11 @@ const AdminPage = () => {
     },
   ];
 
-  // Render component dựa trên menu được chọn
   const renderContent = () => {
     console.log("Rendering content for:", selectedKey);
     switch (selectedKey) {
       case "user":
-        return <AdminUsersTable />; // Thay UserAdmin bằng AdminUsersTable
+        return <AdminUsersTable />; 
       case "booking":
         return <RoomAdmin />;
       case "dashboard":
@@ -82,7 +80,7 @@ const AdminPage = () => {
   }
 
   if (!isLoggedIn) {
-    return null; // Đợi chuyển hướng
+    return null; 
   }
 
   return (

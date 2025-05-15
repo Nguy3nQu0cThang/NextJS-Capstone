@@ -1,4 +1,4 @@
-import { http } from "app/utils/setting"; // Đảm bảo bạn đang sử dụng đúng http instance của bạn
+import { http } from "app/utils/setting"; 
 
 export const deleteAccount = async (userId) => {
   try {

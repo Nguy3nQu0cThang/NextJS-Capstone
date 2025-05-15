@@ -38,7 +38,6 @@ const UserProfile = () => {
     isCheckingAuth,
   } = useAuth();
 
-  // Load lại userProfile từ localStorage nếu chưa có trong context
   useEffect(() => {
     if (!userProfile?.id) {
       const storedProfile = localStorage.getItem("userProfile");
@@ -68,7 +67,7 @@ const UserProfile = () => {
       if (!isAuthenticated) {
         setError("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
         setLoading(false);
-        router.push("/"); // Chỉ chuyển hướng về Home nếu không đăng nhập
+        router.push("/");
         return;
       }
 
@@ -263,7 +262,7 @@ const UserProfile = () => {
 
       {modalVisible && (
         <UpdateProfile
-          open={modalVisible}
+          visible={modalVisible}
           onCancel={() => setModalVisible(false)}
           profile={userProfile}
           onSuccess={handleUpdateSuccess}
@@ -281,17 +280,16 @@ const UserProfile = () => {
             await deleteAccount(userProfile.id);
             console.log("Delete account successful");
 
-            clearAuthData(); // Xóa localStorage và cập nhật state
-            const isAuthenticated = await checkAuthState(); // Kiểm tra lại trạng thái
+            clearAuthData();
+            const isAuthenticated = await checkAuthState(); 
             console.log("Auth state after delete:", { isAuthenticated });
 
-            setUserProfile(null); // Đặt lại userProfile để không hiển thị thông tin cũ
+            setUserProfile(null); 
             message.success("Tài khoản đã được xóa thành công.");
 
-            // Kiểm tra localStorage sau khi xóa
             console.log("LocalStorage after clear:", localStorage);
 
-            router.push("/"); // Chuyển hướng về trang chủ
+            router.push("/");
           } catch (error) {
             console.error("Delete account error:", error);
             message.error(

@@ -15,6 +15,7 @@ import { headerReducer, initialState } from "app/redux/reducer/store";
 import UserMenu from "./User/UserMenu";
 import { useAuth } from "app/context/AuthContext";
 import AuthModal from "./auth/AuthModal";
+import Link from "next/link";
 
 const { Header: AntHeader } = Layout;
 
@@ -144,14 +145,24 @@ const Header = ({ onSearch }) => {
         width: "100%",
       }}
     >
-      <div style={{ width: "200px", display: "flex", alignItems: "center" }}>
-        <Image
-          src="/Airbnb-Logo.wine.png"
-          alt="Airbnb"
-          width={200}
-          height={50}
-          style={{ maxWidth: "100%", height: "auto" }}
-        />
+      <div style={{ position: "relative", width: 192, height: 120 }}>
+        <Link
+          href="/"
+          style={{
+            display: "block",
+            position: "relative",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <Image
+            src="/Airbnb-Logo.wine.png"
+            alt="Airbnb"
+            fill
+            sizes="(max-width: 600px) 100vw, 200px"
+            style={{ objectFit: "contain", cursor: "pointer" }}
+          />
+        </Link>
       </div>
 
       <div
