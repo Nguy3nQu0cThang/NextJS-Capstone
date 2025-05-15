@@ -8,7 +8,7 @@ import {
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import UserAdmin from "app/components/admin/UserAdmin";
+import AdminUsersTable from "app/components/admin/AdminUsersTable"; // Thay UserAdmin bằng AdminUsersTable
 import RoomAdmin from "app/components/admin/RoomAdmin";
 import DashBoard from "app/components/admin/DashBoard";
 import { useAuth } from "app/context/AuthContext";
@@ -62,13 +62,13 @@ const AdminPage = () => {
     console.log("Rendering content for:", selectedKey);
     switch (selectedKey) {
       case "user":
-        return <UserAdmin />;
+        return <AdminUsersTable />; // Thay UserAdmin bằng AdminUsersTable
       case "booking":
         return <RoomAdmin />;
       case "dashboard":
         return <DashBoard />;
       default:
-        return <UserAdmin />;
+        return <AdminUsersTable />;
     }
   };
 
@@ -108,7 +108,7 @@ const AdminPage = () => {
             borderBottom: "1px solid rgba(255,255,255,0.1)",
           }}
         >
-          Admin Panel
+          Quản Lý
         </div>
         <Menu
           theme="dark"

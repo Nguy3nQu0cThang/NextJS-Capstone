@@ -21,39 +21,55 @@ const AvatarUpload = ({ userProfile, setUserProfile, refreshProfile }) => {
       return false;
     }
 
-    console.log("Selected file:", file); // Kiểm tra file đã được chọn
-    setFileList([file]); // Chỉ cần cập nhật file list
-    return false; // Ngăn upload mặc định và thực hiện customRequest
+    console.log("Selected file:", file);
+    setFileList([file]);
+
+    // Gọi handleUpload trực tiếp để đảm bảo API được gọi
+    handleUpload({ file, onSuccess: () => {}, onError: () => {} });
+    return false; // Ngăn upload mặc định
   };
-  
 
   const handleUpload = async (options) => {
-    console.log("Custom request triggered", options); // Xem options có được truyền vào không
-
-    const { file } = options;
-    console.log("File to upload:", file); // Kiểm tra file
+    const { file, onSuccess, onError } = options;
+    console.log("Custom request triggered with options:", options);
+    console.log("File to upload:", file);
 
     const formData = new FormData();
     formData.append("formFile", file);
     formData.append("id", userProfile.id);
 
-    console.log("Form data prepared:", formData);
+    console.log("Form data prepared:", Array.from(formData.entries()));
 
     setUploading(true);
     try {
       const res = await http.post("/api/users/upload-avatar", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log("API response:", res); // Kiểm tra phản hồi API
+      console.log("API response:", res.data);
+
+      if (res.data.statusCode === 200) {
+        message.success("Tải lên avatar thành công!");
+        setUserProfile((prev) => ({
+          ...prev,
+          avatar: res.data.content?.avatar,
+        }));
+        if (refreshProfile) refreshProfile();
+        onSuccess();
+      } else {
+        throw new Error("Upload thất bại từ server!");
+      }
     } catch (err) {
       console.error("Upload error:", err.response?.data || err.message);
+      message.error(
+        "Tải lên thất bại: " + (err.response?.data?.content || err.message)
+      );
+      onError(err);
     } finally {
       setUploading(false);
+      setFileList([]);
       console.log("Upload process finished.");
     }
   };
-  
-  
 
   return (
     <Upload
@@ -62,7 +78,7 @@ const AvatarUpload = ({ userProfile, setUserProfile, refreshProfile }) => {
       fileList={fileList}
       onRemove={() => setFileList([])}
       maxCount={1}
-      showUploadList={false} // Tắt hiển thị danh sách file
+      showUploadList={false}
     >
       <Button
         icon={<UploadOutlined />}

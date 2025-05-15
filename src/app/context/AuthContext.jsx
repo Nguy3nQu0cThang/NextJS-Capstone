@@ -19,10 +19,9 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
-  const [authFailed, setAuthFailed] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
-  const pathname = usePathname(); // ✅ Fix lỗi router.pathname
+  const pathname = usePathname();
 
   const showModal = (mode) => {
     setModalMode(mode);
@@ -31,22 +30,30 @@ export const AuthProvider = ({ children }) => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
-    setAuthFailed(false);
   };
 
   const clearAuthData = () => {
-    localStorage.removeItem("accessToken");
+    console.log("Clearing auth data...");
+    localStorage.removeItem("token");
     localStorage.removeItem("tokenExpiry");
     localStorage.removeItem("userName");
     localStorage.removeItem("userProfile");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tempPassword");
+    setIsLoggedIn(false);
+    setUserName("");
+    setUserProfile(null);
+    console.log("Auth data cleared:", { isLoggedIn, userName, userProfile });
   };
 
   const checkAuthState = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
       const expiry = localStorage.getItem("tokenExpiry");
       const storedUserName = localStorage.getItem("userName");
       const storedProfile = localStorage.getItem("userProfile");
+
+      console.log("Checking auth state:", { token, expiry, storedUserName });
 
       if (
         !token ||
@@ -59,7 +66,6 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
 
-      // Ưu tiên dùng userProfile trong localStorage nếu hợp lệ
       if (storedProfile) {
         try {
           const profile = JSON.parse(storedProfile);
@@ -73,14 +79,13 @@ export const AuthProvider = ({ children }) => {
             setIsLoggedIn(true);
             return true;
           } else {
-            localStorage.removeItem("userProfile"); // Xóa nếu không hợp lệ
+            localStorage.removeItem("userProfile");
           }
         } catch {
           localStorage.removeItem("userProfile");
         }
       }
 
-      // Nếu không có profile hoặc không hợp lệ thì gọi API
       const res = await http.get("/api/users");
       if (res.data.statusCode === 200 && Array.isArray(res.data.content)) {
         const profile = res.data.content.find(
@@ -125,26 +130,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [checkAuthState]);
 
-  useEffect(() => {
-    const handleAuthFailed = () => {
-      clearAuthData();
-      setIsLoggedIn(false);
-      setUserName("");
-      setUserProfile(null);
-      setAuthFailed(true);
-      router.push("/");
-    };
-
-    window.addEventListener("authFailed", handleAuthFailed);
-    return () => window.removeEventListener("authFailed", handleAuthFailed);
-  }, [router]);
-
-  useEffect(() => {
-    if (authFailed && pathname === "/") {
-      showModal("login");
-    }
-  }, [authFailed, pathname]);
-
   const login = async (username, token, profile = null) => {
     try {
       if (!token || token.split(".").length !== 3) {
@@ -152,7 +137,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       const expiry = new Date().getTime() + 24 * 60 * 60 * 1000;
-      localStorage.setItem("accessToken", token);
+      localStorage.setItem("token", token);
       localStorage.setItem("tokenExpiry", expiry.toString());
       localStorage.setItem("userName", username);
 
@@ -168,22 +153,21 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
       clearAuthData();
-      setIsLoggedIn(false);
-      setUserName("");
-      setUserProfile(null);
       message.error("Đăng nhập thất bại. Vui lòng thử lại.");
       return false;
     }
   };
-  
 
-  const logout = () => {
-    clearAuthData();
-    setIsLoggedIn(false);
-    setUserName("");
-    setUserProfile(null);
-    message.success("Đăng xuất thành công!");
-    router.push("/");
+  const logout = async () => {
+    try {
+      clearAuthData();
+      message.success("Đăng xuất thành công!");
+      await checkAuthState();
+      router.push("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+      message.error("Đăng xuất thất bại. Vui lòng thử lại.");
+    }
   };
 
   return (
@@ -204,6 +188,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         checkAuthState,
+        clearAuthData,
         isCheckingAuth,
       }}
     >

@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Avatar, Descriptions, Alert, Spin, Button, message, Modal } from "antd";
+import {
+  Card,
+  Avatar,
+  Descriptions,
+  Alert,
+  Spin,
+  Button,
+  message,
+  Modal,
+} from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useAuth } from "app/context/AuthContext";
 import { http } from "app/utils/setting";
@@ -24,6 +33,7 @@ const UserProfile = () => {
     userName,
     setUserProfile,
     checkAuthState,
+    clearAuthData,
     showModal,
     isCheckingAuth,
   } = useAuth();
@@ -55,7 +65,12 @@ const UserProfile = () => {
       }
 
       const isAuthenticated = await checkAuthState();
-      if (!isAuthenticated) return router.push("/");
+      if (!isAuthenticated) {
+        setError("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        setLoading(false);
+        router.push("/"); // Chỉ chuyển hướng về Home nếu không đăng nhập
+        return;
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -95,7 +110,6 @@ const UserProfile = () => {
     console.log("Test button");
     setConfirmVisible(true);
   };
-  
 
   const refreshProfile = async () => {
     setLoading(true);
@@ -221,7 +235,7 @@ const UserProfile = () => {
               shape="round"
               style={{ fontWeight: "500", height: "36px" }}
               loading={deleting}
-              onClick={handleDeleteAccount} // Gọi hàm xóa tài khoản
+              onClick={handleDeleteAccount}
             >
               Xóa tài khoản
             </Button>
@@ -261,19 +275,28 @@ const UserProfile = () => {
         title="Xác nhận xóa tài khoản"
         open={confirmVisible}
         onOk={async () => {
-          console.log("test API");
+          console.log("Test API");
           try {
             setDeleting(true);
             await deleteAccount(userProfile.id);
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("tokenExpiry");
-            localStorage.removeItem("userName");
-            localStorage.removeItem("userProfile");
-            setUserProfile(null); 
+            console.log("Delete account successful");
+
+            clearAuthData(); // Xóa localStorage và cập nhật state
+            const isAuthenticated = await checkAuthState(); // Kiểm tra lại trạng thái
+            console.log("Auth state after delete:", { isAuthenticated });
+
+            setUserProfile(null); // Đặt lại userProfile để không hiển thị thông tin cũ
             message.success("Tài khoản đã được xóa thành công.");
-            router.push("/");
+
+            // Kiểm tra localStorage sau khi xóa
+            console.log("LocalStorage after clear:", localStorage);
+
+            router.push("/"); // Chuyển hướng về trang chủ
           } catch (error) {
-            message.error(error.message || "Đã có lỗi xảy ra.");
+            console.error("Delete account error:", error);
+            message.error(
+              error.message || "Đã có lỗi xảy ra khi xóa tài khoản."
+            );
           } finally {
             setDeleting(false);
             setConfirmVisible(false);

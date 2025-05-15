@@ -36,7 +36,7 @@ const UpdateProfile = ({
     const message = error.response?.data?.message || "Có lỗi xảy ra!";
     handleNotification("error", message);
     if (error.response?.status === 401 && loginRedirect) {
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
       showModal("login");
       onCancel();
     }
@@ -44,7 +44,7 @@ const UpdateProfile = ({
 
   const onFinish = async (values) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
       if (!token) {
         handleNotification("error", "Vui lòng đăng nhập để cập nhật hồ sơ.");
         showModal("login");
