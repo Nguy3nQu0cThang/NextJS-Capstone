@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Modal, DatePicker, Select } from "antd";
 import { http } from "app/utils/setting";
 
@@ -12,6 +12,7 @@ const Register = ({ onSuccess }) => {
   const [registerStatus, setRegisterStatus] = useState(""); // "success" hoặc "error"
   const [errorMessage, setErrorMessage] = useState(""); // Lưu thông báo lỗi
   const [formValues, setFormValues] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const onFinish = async (values) => {
     try {
@@ -62,6 +63,14 @@ const Register = ({ onSuccess }) => {
       });
     }
   };
+
+  useEffect(() => {
+    // Lấy thông tin người dùng từ localStorage (nếu có)
+    const userFromStorage = localStorage.getItem("userProfile");
+    if (userFromStorage) {
+      setCurrentUser(JSON.parse(userFromStorage));
+    }
+  }, []);
 
   return (
     <div style={{ maxWidth: 400, margin: "0 auto", padding: "15px 0" }}>
@@ -133,6 +142,21 @@ const Register = ({ onSuccess }) => {
           </Select>
         </Form.Item>
 
+        {currentUser?.role === "ADMIN" && (
+          <Form.Item
+            label="Loại người dùng"
+            name="role"
+            rules={[
+              { required: true, message: "Vui lòng chọn loại người dùng!" },
+            ]}
+          >
+            <Select>
+              <Option value="ADMIN">ADMIN</Option>
+              <Option value="USER">USER</Option>
+            </Select>
+          </Form.Item>
+        )}
+
         <Form.Item>
           <Button
             type="primary"
@@ -153,7 +177,7 @@ const Register = ({ onSuccess }) => {
         okText="OK"
         cancelText="Hủy"
         okButtonProps={{ disabled: registerStatus === "error" }}
-        cancelButtonProps={{className: "custom-cancel-button"}}
+        cancelButtonProps={{ className: "custom-cancel-button" }}
       >
         <p style={{ color: registerStatus === "error" ? "red" : "green" }}>
           {registerStatus === "success"

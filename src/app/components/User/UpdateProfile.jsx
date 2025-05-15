@@ -16,6 +16,15 @@ const UpdateProfile = ({
 }) => {
   const [form] = Form.useForm();
   const [notification, setNotification] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    // Lấy thông tin người dùng từ localStorage (nếu có)
+    const userFromStorage = localStorage.getItem("userProfile");
+    if (userFromStorage) {
+      setCurrentUser(JSON.parse(userFromStorage));
+    }
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -25,6 +34,7 @@ const UpdateProfile = ({
         phone: profile.phone,
         birthday: profile.birthday ? dayjs(profile.birthday) : null,
         gender: profile.gender,
+        role: profile.role,
       });
     }
   }, [profile, form]);
@@ -60,10 +70,7 @@ const UpdateProfile = ({
 
       const res = await http.put(`/api/users/${profile.id}`, payload);
       if (res.data.statusCode === 200) {
-        handleNotification(
-          "success",
-          "Hồ sơ của bạn đã được cập nhật thành công!"
-        );
+        handleNotification("success", "Hồ sơ của bạn đã được cập nhật thành công!");
         onSuccess(res.data.content);
         form.resetFields();
         setTimeout(() => {
@@ -151,21 +158,26 @@ const UpdateProfile = ({
           </Select>
         </Form.Item>
 
+        {/* Chỉ hiển thị khi người dùng hiện tại là ADMIN */}
+        {currentUser?.role === "ADMIN" && (
+          <Form.Item
+            label="Loại người dùng"
+            name="role"
+            rules={[{ required: true, message: "Vui lòng chọn loại người dùng!" }]}
+          >
+            <Select>
+              <Option value="ADMIN">ADMIN</Option>
+              <Option value="USER">USER</Option>
+            </Select>
+          </Form.Item>
+        )}
+
         {renderNotification()}
 
         <Form.Item>
           <Space>
             <Button type="primary" htmlType="submit">
               Cập nhật
-            </Button>
-            <Button
-              style={{
-                backgroundColor: "#1890ff",
-                color: "white",
-                fontWeight: 500,
-              }}
-            >
-              Đổi mật khẩu
             </Button>
           </Space>
         </Form.Item>

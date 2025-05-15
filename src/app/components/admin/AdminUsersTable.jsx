@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Pagination, message, Popconfirm } from "antd";
+import { Table, Input, Button, Pagination, message, Popconfirm, Modal } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import { http } from "app/utils/setting";
+import UpdateProfile from "../User/UpdateProfile";
+import { deleteAccount } from "app/services/userService";
+import Register from "../auth/Register";
 
 const AdminUsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -16,6 +19,9 @@ const AdminUsersTable = () => {
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false); // Modal cho UpdateProfile
+  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false); // Modal cho Register
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const fetchUsers = async (pageIndex, pageSize, keyword) => {
     setLoading(true);
@@ -56,32 +62,59 @@ const AdminUsersTable = () => {
     fetchUsers(newPage, newPageSize, keyword);
   };
 
-  const handleDelete = async (userId) => {
+  const checkUserExists = async (userId) => {
     try {
-      const response = await http.delete(`/api/users/${userId}`);
-      if (response.data.statusCode === 200) {
-        message.success("Xóa người dùng thành công!");
-        fetchUsers(page, pageSize, keyword); // Reload danh sách
-      } else {
-        message.error("Xóa người dùng thất bại!");
-        console.error("Failed to delete user:", response.data);
-      }
+      const response = await http.get(`/api/users/${userId}`);
+      return response.data.statusCode === 200;
     } catch (error) {
-      message.error("Đã có lỗi xảy ra khi xóa người dùng!");
       console.error(
-        "Error deleting user:",
+        "Error checking user:",
         error.response?.data || error.message
       );
+      return false;
     }
   };
 
-  const handleUpdate = (user) => {
-    // Placeholder cho chức năng cập nhật
-    message.info(
-      `Chức năng cập nhật người dùng ID: ${user.id} đang được phát triển!`
+  const handleDelete = async (userId) => {
+    try {
+      const userExists = await checkUserExists(userId);
+      if (!userExists) {
+        message.error("Người dùng không tồn tại hoặc đã bị xóa!");
+        return;
+      }
+
+      await deleteAccount(userId);
+      message.success("Xóa người dùng thành công!");
+      fetchUsers(page, pageSize, keyword);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      if (error.response?.status === 404) {
+        message.error("Người dùng không tồn tại!");
+      } else if (error.response?.status === 403) {
+        message.error("Bạn không có quyền xóa người dùng này!");
+      } else {
+        message.error("Đã có lỗi xảy ra khi xóa người dùng!");
+      }
+    }
+  };
+
+  const handleUpdateSuccess = (updatedUser) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => (user.id === updatedUser.id ? updatedUser : user))
     );
-    console.log("User to update:", user);
-    // Ở đây bạn có thể mở modal hoặc chuyển hướng để chỉnh sửa thông tin người dùng
+    setIsModalVisible(false);
+    message.success("Cập nhật người dùng thành công!");
+  };
+
+  const handleRegisterSuccess = () => {
+    setIsRegisterModalVisible(false);
+    message.success("Tạo tài khoản thành công!");
+    fetchUsers(page, pageSize, keyword); // Reload danh sách người dùng
+  };
+
+  const showModal = (user) => {
+    setSelectedUser(user);
+    setIsModalVisible(true);
   };
 
   const columns = [
@@ -104,16 +137,16 @@ const AdminUsersTable = () => {
         <div style={{ display: "flex", gap: "10px" }}>
           <Button
             icon={<EditOutlined />}
-            onClick={() => handleUpdate(record)}
+            onClick={() => showModal(record)}
             type="primary"
-          ></Button>
+          />
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa người dùng này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Có"
             cancelText="Không"
           >
-            <Button icon={<DeleteOutlined />} danger></Button>
+            <Button icon={<DeleteOutlined />} danger />
           </Popconfirm>
         </div>
       ),
@@ -123,18 +156,41 @@ const AdminUsersTable = () => {
   return (
     <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
       <h2 style={{ marginBottom: "20px" }}>Danh sách người dùng</h2>
-      <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
-        <Input
-          placeholder="Tìm kiếm theo từ khóa"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onPressEnter={handleSearch}
-          style={{ width: 250 }}
-        />
-        <Button icon={<SearchOutlined />} onClick={handleSearch} type="primary">
-          Tìm kiếm
+      <div
+        style={{
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Input
+            placeholder="Tìm kiếm theo từ khóa"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onPressEnter={handleSearch}
+            style={{ width: 250 }}
+          />
+          <Button
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+            type="primary"
+          >
+            Tìm kiếm
+          </Button>
+        </div>
+
+        <Button
+          type="primary"
+          onClick={() => {
+            setIsRegisterModalVisible(true); // Mở modal Register
+          }}
+        >
+          + Tạo tài khoản
         </Button>
       </div>
+
       <Table
         columns={columns}
         dataSource={users}
@@ -152,6 +208,27 @@ const AdminUsersTable = () => {
         showSizeChanger
         style={{ marginTop: "20px", textAlign: "right" }}
       />
+
+      {isModalVisible && selectedUser && (
+        <UpdateProfile
+          visible={isModalVisible}
+          onCancel={() => setIsModalVisible(false)}
+          profile={selectedUser}
+          onSuccess={handleUpdateSuccess}
+          showModal={() => {}} 
+        />
+      )}
+
+      {isRegisterModalVisible && (
+        <Modal
+          title="Tạo tài khoản mới"
+          open={isRegisterModalVisible}
+          onCancel={() => setIsRegisterModalVisible(false)}
+          footer={null}
+        >
+          <Register onSuccess={handleRegisterSuccess} />
+        </Modal>
+      )}
     </div>
   );
 };
