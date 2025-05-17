@@ -18,7 +18,7 @@ import AuthModal from "./auth/AuthModal";
 import Link from "next/link";
 
 const { Header: AntHeader } = Layout;
-
+const { RangePicker } = DatePicker;
 const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
   const {
@@ -183,50 +183,14 @@ const Header = ({ onSearch }) => {
           <span style={{ cursor: "pointer" }}>{locationLabel}</span>
         </Dropdown>
         <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
-        <Dropdown
-          open={state.openDate}
-          onOpenChange={() => dispatch({ type: "TOGGLE_DATE" })}
-          dropdownRender={() => (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            >
-              <div style={{ position: "relative", padding: 8 }}>
-                <Button
-                  shape="circle"
-                  size="small"
-                  onClick={() => dispatch({ type: "TOGGLE_DATE" })}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    zIndex: 10,
-                    backgroundColor: "#f5f5f5",
-                    border: "none",
-                  }}
-                >
-                  ✕
-                </Button>
-                <DatePicker.RangePicker
-                  locale={locale}
-                  format="DD/MM/YYYY"
-                  value={state.dates}
-                  onCalendarChange={(val) =>
-                    dispatch({ type: "SET_DATES", payload: val })
-                  }
-                  style={{ width: "100%" }}
-                  allowClear={false}
-                  open={true}
-                />
-              </div>
-            </div>
-          )}
-        >
-          <span style={{ cursor: "pointer" }}>{dateLabel}</span>
-        </Dropdown>
+        <RangePicker
+          locale={locale}
+          format="DD/MM/YYYY"
+          className="w-full rounded-lg shadow-sm"
+          value={state.dates}
+          onChange={(val) => dispatch({ type: "SET_DATES", payload: val })}
+          allowClear={false}
+        />
         <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
         <Dropdown
           open={state.guestOpen}
