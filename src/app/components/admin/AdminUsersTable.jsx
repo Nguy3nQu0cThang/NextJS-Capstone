@@ -9,6 +9,8 @@ import {
   message,
   Popconfirm,
   Modal,
+  Tag,
+
 } from "antd";
 import {
   SearchOutlined,
@@ -127,7 +129,12 @@ const AdminUsersTable = () => {
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Tên", dataIndex: "name", key: "name" },
+    {
+      title: "Tên",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Số điện thoại", dataIndex: "phone", key: "phone" },
     { title: "Ngày sinh", dataIndex: "birthday", key: "birthday" },
@@ -135,9 +142,17 @@ const AdminUsersTable = () => {
       title: "Giới tính",
       dataIndex: "gender",
       key: "gender",
-      render: (text) => (text ? "Nam" : "Nữ"),
+      render: (gender) =>
+        gender ? <Tag color="blue">Nam</Tag> : <Tag color="pink">Nữ</Tag>,
     },
-    { title: "Vai trò", dataIndex: "role", key: "role" },
+    {
+      title: "Vai trò",
+      dataIndex: "role",
+      key: "role",
+      render: (role) => (
+        <Tag color={role === "ADMIN" ? "red" : "green"}>{role}</Tag>
+      ),
+    },
     {
       title: "Chức năng",
       key: "actions",
@@ -199,6 +214,7 @@ const AdminUsersTable = () => {
         pagination={false}
         scroll={{ x: "max-content" }}
         className="admin-users-table"
+        locale={{ emptyText: "Không có dữ liệu" }}
       />
       <Pagination
         current={page}

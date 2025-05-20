@@ -18,7 +18,7 @@ import AuthModal from "./auth/AuthModal";
 import Link from "next/link";
 
 const { Header: AntHeader } = Layout;
-
+const { RangePicker } = DatePicker;
 const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
   const {
@@ -267,6 +267,33 @@ const Header = ({ onSearch }) => {
             left: "50%",
             transform: "translateX(-50%)",
           }}
+        <Dropdown menu={locationMenu} trigger={["click"]}>
+          <span style={{ cursor: "pointer" }}>{locationLabel}</span>
+        </Dropdown>
+        <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
+        <RangePicker
+          locale={locale}
+          format="DD/MM/YYYY"
+          className="w-full rounded-lg shadow-sm"
+          value={state.dates}
+          onChange={(val) => dispatch({ type: "SET_DATES", payload: val })}
+          allowClear={false}
+        />
+        <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
+        <Dropdown
+          open={state.guestOpen}
+          onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
+          dropdownRender={() => (
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              }}
+            >
+              {guestDropdown}
+            </div>
+          )}
         >
           {searchBar}
         </div>

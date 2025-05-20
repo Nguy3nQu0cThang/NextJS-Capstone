@@ -25,3 +25,19 @@ export const getRoomsByLocation = (maViTri) => {
     params: { maViTri },
   });
 };
+
+export const getAllRoomsPaging = async (pageIndex, pageSize, keyword = "") => {
+  const response = await api.get(
+    `/phong-thue/phan-trang-tim-kiem?pageIndex=${pageIndex}&pageSize=${pageSize}&keyword=${keyword}`
+  );
+  return response.data;
+};
+
+export const deleteRoomById = async (roomId) => {
+  const response = await api.delete(`/phong-thue/${roomId}`);
+  return response.data;
+};
+export const getAllBookings = async () => {
+  const response = await api.get("/dat-phong");
+  return response.data.content; 
+};
