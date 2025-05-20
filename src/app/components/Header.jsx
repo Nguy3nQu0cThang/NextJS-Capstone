@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useState } from "react";
+import { usePathname } from "next/navigation"; // Thêm usePathname
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import locale from "antd/es/date-picker/locale/vi_VN";
@@ -19,6 +20,7 @@ import Link from "next/link";
 
 const { Header: AntHeader } = Layout;
 const { RangePicker } = DatePicker;
+
 const Header = ({ onSearch }) => {
   const [state, dispatch] = useReducer(headerReducer, initialState);
   const {
@@ -32,7 +34,13 @@ const Header = ({ onSearch }) => {
     setModalMode,
     handleCancel,
   } = useAuth();
+
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
+
+  // Lấy đường dẫn hiện tại
+  const pathname = usePathname();
+  const isHomePage = pathname === "/"; // Chỉ hiển thị searchBar ở trang Home
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -97,13 +105,6 @@ const Header = ({ onSearch }) => {
     ? `${state.selectedLocation.tenViTri} - ${state.selectedLocation.tinhThanh}`
     : "Địa điểm bất kỳ";
 
-  const dateLabel =
-    state.dates?.length === 2
-      ? `${dayjs(state.dates[0]).format("D [thg] M")} - ${dayjs(
-          state.dates[1]
-        ).format("D [thg] M")}`
-      : "Thời gian";
-
   const locationMenu = {
     items: (state.locations || []).map((item) => ({
       key: item.id,
@@ -113,7 +114,7 @@ const Header = ({ onSearch }) => {
   };
 
   const handleSearch = async () => {
-    if (!state.selectedLocation || state.dates.length !== 2) {
+    if (!state.selectedLocation || state.dates?.length !== 2) {
       message.warning("Vui lòng chọn đầy đủ địa điểm và ngày ở!");
       return;
     }
@@ -134,65 +135,64 @@ const Header = ({ onSearch }) => {
 
   const searchBar = (
     <div className="search-bar">
+      {/* Địa điểm */}
       <Dropdown menu={locationMenu} trigger={["click"]}>
         <span className="dropdown-label" style={{ cursor: "pointer" }}>
           {locationLabel}
         </span>
       </Dropdown>
+
       <div
         className="divider"
         style={{ height: 16, borderLeft: "1px solid #ddd" }}
       />
+
+      {/* Thời gian */}
       <Dropdown
-        open={state.openDate}
+        trigger={["click"]}
+        open={state.dateOpen}
         onOpenChange={() => dispatch({ type: "TOGGLE_DATE" })}
         dropdownRender={() => (
           <div
             style={{
               background: "#fff",
+              padding: 12,
               borderRadius: 8,
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
             }}
           >
-            <div style={{ position: "relative", padding: 8 }}>
-              <Button
-                shape="circle"
-                size="small"
-                onClick={() => dispatch({ type: "TOGGLE_DATE" })}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  zIndex: 10,
-                  backgroundColor: "#f5f5f5",
-                  border: "none",
-                }}
-              >
-                ✕
-              </Button>
-              <DatePicker.RangePicker
-                locale={locale}
-                format="DD/MM/YYYY"
-                value={state.dates}
-                onCalendarChange={(val) =>
-                  dispatch({ type: "SET_DATES", payload: val })
+            <RangePicker
+              locale={locale}
+              format="DD/MM/YYYY"
+              value={state.dates}
+              open={isDateOpen}
+              onOpenChange={(open) => setIsDateOpen(open)}
+              allowClear={false}
+              onChange={(val) => {
+                dispatch({ type: "SET_DATES", payload: val });
+                if (val && val.length === 2 && val[0] && val[1]) {
+                  setTimeout(() => setIsDateOpen(false), 150); // đóng sau khi chọn đủ ngày
                 }
-                style={{ width: "100%" }}
-                allowClear={false}
-                open={true}
-              />
-            </div>
+              }}
+            />
           </div>
         )}
       >
         <span className="dropdown-label" style={{ cursor: "pointer" }}>
-          {dateLabel}
+          {state.dates?.length === 2 && state.dates[0] && state.dates[1]
+            ? `${dayjs(state.dates[0]).format("D [thg] M")} - ${dayjs(
+                state.dates[1]
+              ).format("D [thg] M")}`
+            : "Thời gian"}
         </span>
       </Dropdown>
+
       <div
         className="divider"
         style={{ height: 16, borderLeft: "1px solid #ddd" }}
       />
+
+      {/* Số khách */}
       <Dropdown
         open={state.guestOpen}
         onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
@@ -212,6 +212,7 @@ const Header = ({ onSearch }) => {
           {guestLabel()}
         </span>
       </Dropdown>
+
       <Button
         shape="circle"
         icon={<SearchOutlined />}
@@ -260,43 +261,19 @@ const Header = ({ onSearch }) => {
           </Link>
         </div>
 
-        <div
-          className="search-bar-container"
-          style={{
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        <Dropdown menu={locationMenu} trigger={["click"]}>
-          <span style={{ cursor: "pointer" }}>{locationLabel}</span>
-        </Dropdown>
-        <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
-        <RangePicker
-          locale={locale}
-          format="DD/MM/YYYY"
-          className="w-full rounded-lg shadow-sm"
-          value={state.dates}
-          onChange={(val) => dispatch({ type: "SET_DATES", payload: val })}
-          allowClear={false}
-        />
-        <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
-        <Dropdown
-          open={state.guestOpen}
-          onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
-          dropdownRender={() => (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            >
-              {guestDropdown}
-            </div>
-          )}
-        >
-          {searchBar}
-        </div>
+        {/* Chỉ hiển thị searchBar ở trang Home */}
+        {isHomePage && (
+          <div
+            className="search-bar-container"
+            style={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            {searchBar}
+          </div>
+        )}
 
         <div className="search-toggle-mobile">
           <Button

@@ -1,66 +1,66 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, message, Spin } from "antd";
+import { Layout, Menu, message, Spin, Grid } from "antd";
 import {
   DashboardOutlined,
   UserOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import AdminUsersTable from "app/components/admin/AdminUsersTable"; 
+import AdminUsersTable from "app/components/admin/AdminUsersTable";
 import RoomAdmin from "app/components/admin/RoomAdmin";
 import DashBoard from "app/components/admin/DashBoard";
 import { useAuth } from "app/context/AuthContext";
 
 const { Sider, Content } = Layout;
+const { useBreakpoint } = Grid;
 
 const AdminPage = () => {
   const [selectedKey, setSelectedKey] = useState("user");
+  const [collapsed, setCollapsed] = useState(false);
   const { isLoggedIn, isCheckingAuth, isModalOpen } = useAuth();
   const router = useRouter();
+  const screens = useBreakpoint(); // detect responsive
+
+  // Collapse menu nếu màn hình nhỏ hơn md
+  useEffect(() => {
+    setCollapsed(!screens.md);
+  }, [screens]);
 
   useEffect(() => {
-    console.log("isCheckingAuth:", isCheckingAuth);
-    console.log("isLoggedIn:", isLoggedIn);
-    console.log("isModalOpen:", isModalOpen);
     if (!isCheckingAuth && !isLoggedIn && !isModalOpen) {
-      console.log("Redirecting to home due to unauthorized access");
       message.error("Vui lòng đăng nhập để truy cập.");
       router.push("/");
     }
   }, [isCheckingAuth, isLoggedIn, isModalOpen, router]);
 
-  // Xử lý chọn menu
   const handleMenuClick = ({ key }) => {
-    console.log("Menu clicked:", key);
     setSelectedKey(key);
   };
 
-  // Menu items
   const menuItems = [
     {
       key: "user",
       icon: <UserOutlined />,
-      label: "Quản lý người dùng",
+      label: collapsed ? null : "Quản lý người dùng",
     },
     {
       key: "booking",
       icon: <CalendarOutlined />,
-      label: "Quản lý đặt chỗ",
+      label: collapsed ? null : "Quản lý đặt chỗ",
     },
     {
       key: "dashboard",
       icon: <DashboardOutlined />,
-      label: "Dashboard",
+      label: collapsed ? null : "Dashboard",
     },
   ];
 
   const renderContent = () => {
-    console.log("Rendering content for:", selectedKey);
     switch (selectedKey) {
       case "user":
-        return <AdminUsersTable />; 
+        return <AdminUsersTable />;
       case "booking":
         return <RoomAdmin />;
       case "dashboard":
@@ -80,18 +80,20 @@ const AdminPage = () => {
   }
 
   if (!isLoggedIn) {
-    return null; 
+    return null;
   }
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "row" }}
+    >
       <Sider
-        width={250}
+        width="20%"
+        collapsedWidth="80"
+        collapsible
+        collapsed={collapsed}
         style={{
           background: "#001529",
-          position: "fixed",
-          height: "100vh",
-          overflow: "auto",
         }}
       >
         <div
@@ -104,9 +106,11 @@ const AdminPage = () => {
             fontSize: 20,
             fontWeight: "bold",
             borderBottom: "1px solid rgba(255,255,255,0.1)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
           }}
         >
-          Quản Lý
+          {!collapsed ? "Quản Lý" : "QL"}
         </div>
         <Menu
           theme="dark"
@@ -117,13 +121,13 @@ const AdminPage = () => {
           style={{ paddingTop: 16 }}
         />
       </Sider>
-      <Layout style={{ marginLeft: 250 }}>
+      <Layout style={{ width: collapsed ? "calc(100% - 80px)" : "80%" }}>
         <Content
           style={{
             padding: 24,
-            margin: 0,
             minHeight: 280,
             background: "#f0f2f5",
+            transition: "all 0.3s",
           }}
         >
           {renderContent()}
