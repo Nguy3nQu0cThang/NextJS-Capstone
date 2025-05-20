@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Pagination, message, Popconfirm, Modal } from "antd";
+import {
+  Table,
+  Input,
+  Button,
+  Pagination,
+  message,
+  Popconfirm,
+  Modal,
+  Tag,
+} from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -119,7 +128,12 @@ const AdminUsersTable = () => {
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Tên", dataIndex: "name", key: "name" },
+    {
+      title: "Tên",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Số điện thoại", dataIndex: "phone", key: "phone" },
     { title: "Ngày sinh", dataIndex: "birthday", key: "birthday" },
@@ -127,9 +141,17 @@ const AdminUsersTable = () => {
       title: "Giới tính",
       dataIndex: "gender",
       key: "gender",
-      render: (text) => (text ? "Nam" : "Nữ"),
+      render: (gender) =>
+        gender ? <Tag color="blue">Nam</Tag> : <Tag color="pink">Nữ</Tag>,
     },
-    { title: "Vai trò", dataIndex: "role", key: "role" },
+    {
+      title: "Vai trò",
+      dataIndex: "role",
+      key: "role",
+      render: (role) => (
+        <Tag color={role === "ADMIN" ? "red" : "green"}>{role}</Tag>
+      ),
+    },
     {
       title: "Chức năng",
       key: "actions",
@@ -198,6 +220,7 @@ const AdminUsersTable = () => {
         rowKey="id"
         pagination={false}
         scroll={{ x: "max-content" }}
+        locale={{ emptyText: "Không có dữ liệu" }}
       />
       <Pagination
         current={page}
@@ -215,7 +238,7 @@ const AdminUsersTable = () => {
           onCancel={() => setIsModalVisible(false)}
           profile={selectedUser}
           onSuccess={handleUpdateSuccess}
-          showModal={() => {}} 
+          showModal={() => {}}
         />
       )}
 
