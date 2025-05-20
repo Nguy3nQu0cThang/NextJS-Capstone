@@ -45,35 +45,17 @@ const UserMenu = ({ isLoggedIn, userName, showModal }) => {
       ];
 
   return (
-    <div
-      style={{
-        marginLeft: "auto",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        maxWidth: "300px",
-      }}
-    >
-      <span style={{ cursor: "pointer", fontSize: "14px" }}>Booking</span>
-      <GlobalOutlined style={{ fontSize: "16px", cursor: "pointer" }} />
-      {isLoggedIn && userName && (
-        <div
-          style={{
-            maxWidth: "150px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {userName}
-        </div>
-      )}
+    <div className="user-menu">
+      <span className="booking-text">Booking</span>
+      <GlobalOutlined className="global-icon" />
+      {isLoggedIn && userName && <div className="user-name">{userName}</div>}
       <Dropdown
         menu={{ items: menuItems, onClick: handleMenuClick }}
         trigger={["click"]}
       >
         <a onClick={(e) => e.preventDefault()}>
           <Space>
-            <Button style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Button className="dropdown-button">
               <MenuOutlined />
               <UserOutlined />
             </Button>

@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Pagination, message, Popconfirm, Modal } from "antd";
+import {
+  Table,
+  Input,
+  Button,
+  Pagination,
+  message,
+  Popconfirm,
+  Modal,
+} from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -134,7 +142,7 @@ const AdminUsersTable = () => {
       title: "Chức năng",
       key: "actions",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div className="actions-container">
           <Button
             icon={<EditOutlined />}
             onClick={() => showModal(record)}
@@ -154,23 +162,15 @@ const AdminUsersTable = () => {
   ];
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: "20px" }}>Danh sách người dùng</h2>
-      <div
-        style={{
-          marginBottom: "20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", gap: "10px" }}>
+    <div className="admin-users-table-container">
+      <h2 className="admin-users-title">Danh sách người dùng</h2>
+      <div className="admin-users-search-bar">
+        <div className="admin-users-search-input">
           <Input
             placeholder="Tìm kiếm theo từ khóa"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onPressEnter={handleSearch}
-            style={{ width: 250 }}
           />
           <Button
             icon={<SearchOutlined />}
@@ -180,12 +180,12 @@ const AdminUsersTable = () => {
             Tìm kiếm
           </Button>
         </div>
-
         <Button
           type="primary"
           onClick={() => {
             setIsRegisterModalVisible(true); // Mở modal Register
           }}
+          className="admin-users-add-button"
         >
           + Tạo tài khoản
         </Button>
@@ -198,6 +198,7 @@ const AdminUsersTable = () => {
         rowKey="id"
         pagination={false}
         scroll={{ x: "max-content" }}
+        className="admin-users-table"
       />
       <Pagination
         current={page}
@@ -206,7 +207,7 @@ const AdminUsersTable = () => {
         onChange={handlePaginationChange}
         pageSizeOptions={[10, 20, 50, 100]}
         showSizeChanger
-        style={{ marginTop: "20px", textAlign: "right" }}
+        className="admin-users-pagination"
       />
 
       {isModalVisible && selectedUser && (
@@ -215,7 +216,7 @@ const AdminUsersTable = () => {
           onCancel={() => setIsModalVisible(false)}
           profile={selectedUser}
           onSuccess={handleUpdateSuccess}
-          showModal={() => {}} 
+          showModal={() => {}}
         />
       )}
 

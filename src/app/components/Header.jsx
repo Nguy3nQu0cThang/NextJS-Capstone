@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import locale from "antd/es/date-picker/locale/vi_VN";
-import { Layout, Button, Dropdown, DatePicker, message } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Layout, Button, Dropdown, DatePicker, message, Modal } from "antd";
+import { SearchOutlined, MenuOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import {
   getListLocations,
@@ -32,6 +32,7 @@ const Header = ({ onSearch }) => {
     setModalMode,
     handleCancel,
   } = useAuth();
+  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -51,7 +52,7 @@ const Header = ({ onSearch }) => {
   };
 
   const guestDropdown = (
-    <div style={{ width: 250, padding: 12 }}>
+    <div className="guest-dropdown" style={{ width: 250, padding: 12 }}>
       {[
         { label: "Người lớn", type: "adults", desc: "Từ 13 tuổi trở lên" },
         { label: "Trẻ em", type: "children", desc: "Tuổi 2–12" },
@@ -124,142 +125,179 @@ const Header = ({ onSearch }) => {
     try {
       const res = await getRoomsByLocation(state.selectedLocation.id);
       console.log("Kết quả phòng:", res.data.content);
+      setIsSearchModalVisible(false);
     } catch (err) {
       console.error("Lỗi khi tìm phòng:", err);
       message.error("Không thể tải danh sách phòng!");
     }
   };
 
-  return (
-    <AntHeader
-      style={{
-        display: "flex",
-        alignItems: "center",
-        background: "#fff",
-        padding: "0 40px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-        height: "80px",
-        width: "100%",
-      }}
-    >
-      <div style={{ position: "relative", width: 192, height: 120 }}>
-        <Link
-          href="/"
-          style={{
-            display: "block",
-            position: "relative",
-            width: "100%",
-            height: "100%",
-          }}
-        >
-          <Image
-            src="/Airbnb-Logo.wine.png"
-            alt="Airbnb"
-            fill
-            sizes="(max-width: 600px) 100vw, 200px"
-            style={{ objectFit: "contain", cursor: "pointer" }}
-          />
-        </Link>
-      </div>
-
+  const searchBar = (
+    <div className="search-bar">
+      <Dropdown menu={locationMenu} trigger={["click"]}>
+        <span className="dropdown-label" style={{ cursor: "pointer" }}>
+          {locationLabel}
+        </span>
+      </Dropdown>
       <div
+        className="divider"
+        style={{ height: 16, borderLeft: "1px solid #ddd" }}
+      />
+      <Dropdown
+        open={state.openDate}
+        onOpenChange={() => dispatch({ type: "TOGGLE_DATE" })}
+        dropdownRender={() => (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 8,
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            <div style={{ position: "relative", padding: 8 }}>
+              <Button
+                shape="circle"
+                size="small"
+                onClick={() => dispatch({ type: "TOGGLE_DATE" })}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  zIndex: 10,
+                  backgroundColor: "#f5f5f5",
+                  border: "none",
+                }}
+              >
+                ✕
+              </Button>
+              <DatePicker.RangePicker
+                locale={locale}
+                format="DD/MM/YYYY"
+                value={state.dates}
+                onCalendarChange={(val) =>
+                  dispatch({ type: "SET_DATES", payload: val })
+                }
+                style={{ width: "100%" }}
+                allowClear={false}
+                open={true}
+              />
+            </div>
+          </div>
+        )}
+      >
+        <span className="dropdown-label" style={{ cursor: "pointer" }}>
+          {dateLabel}
+        </span>
+      </Dropdown>
+      <div
+        className="divider"
+        style={{ height: 16, borderLeft: "1px solid #ddd" }}
+      />
+      <Dropdown
+        open={state.guestOpen}
+        onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
+        dropdownRender={() => (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 8,
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            {guestDropdown}
+          </div>
+        )}
+      >
+        <span className="dropdown-label" style={{ cursor: "pointer" }}>
+          {guestLabel()}
+        </span>
+      </Dropdown>
+      <Button
+        shape="circle"
+        icon={<SearchOutlined />}
+        type="primary"
+        style={{ backgroundColor: "#ff385c", borderColor: "#ff385c" }}
+        onClick={handleSearch}
+      />
+    </div>
+  );
+
+  return (
+    <>
+      <AntHeader
+        className="header"
         style={{
-          position: "absolute",
-          left: "50%",
-          transform: "translateX(-50%)",
-          border: "1px solid #ddd",
-          borderRadius: "999px",
-          padding: "0px 20px",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          background: "var(--background)",
+          color: "var(--foreground)",
+          padding: "0 40px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          height: "80px",
+          width: "100%",
         }}
       >
-        <Dropdown menu={locationMenu} trigger={["click"]}>
-          <span style={{ cursor: "pointer" }}>{locationLabel}</span>
-        </Dropdown>
-        <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
-        <Dropdown
-          open={state.openDate}
-          onOpenChange={() => dispatch({ type: "TOGGLE_DATE" })}
-          dropdownRender={() => (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            >
-              <div style={{ position: "relative", padding: 8 }}>
-                <Button
-                  shape="circle"
-                  size="small"
-                  onClick={() => dispatch({ type: "TOGGLE_DATE" })}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    zIndex: 10,
-                    backgroundColor: "#f5f5f5",
-                    border: "none",
-                  }}
-                >
-                  ✕
-                </Button>
-                <DatePicker.RangePicker
-                  locale={locale}
-                  format="DD/MM/YYYY"
-                  value={state.dates}
-                  onCalendarChange={(val) =>
-                    dispatch({ type: "SET_DATES", payload: val })
-                  }
-                  style={{ width: "100%" }}
-                  allowClear={false}
-                  open={true}
-                />
-              </div>
-            </div>
-          )}
-        >
-          <span style={{ cursor: "pointer" }}>{dateLabel}</span>
-        </Dropdown>
-        <div style={{ height: 16, borderLeft: "1px solid #ddd" }} />
-        <Dropdown
-          open={state.guestOpen}
-          onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
-          dropdownRender={() => (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            >
-              {guestDropdown}
-            </div>
-          )}
-        >
-          <span style={{ cursor: "pointer" }}>{guestLabel()}</span>
-        </Dropdown>
-        <Button
-          shape="circle"
-          icon={<SearchOutlined />}
-          type="primary"
-          style={{ backgroundColor: "#ff385c", borderColor: "#ff385c" }}
-          onClick={handleSearch}
-        />
-      </div>
+        <div className="header-logo">
+          <Link
+            href="/"
+            style={{
+              display: "block",
+              position: "relative",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <Image
+              src="/Airbnb-Logo.wine.png"
+              alt="Airbnb"
+              fill
+              sizes="(max-width: 600px) 100vw, 200px"
+              style={{ objectFit: "contain", cursor: "pointer" }}
+            />
+          </Link>
+        </div>
 
-      <UserMenu
-        isLoggedIn={isLoggedIn}
-        userName={userName}
-        logout={logout}
-        showModal={showModal}
-      />
+        <div
+          className="search-bar-container"
+          style={{
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+          }}
+        >
+          {searchBar}
+        </div>
+
+        <div className="search-toggle-mobile">
+          <Button
+            icon={<SearchOutlined />}
+            onClick={() => setIsSearchModalVisible(true)}
+            style={{ borderRadius: "999px", padding: "8px 16px" }}
+          >
+            Tìm kiếm
+          </Button>
+        </div>
+
+        <UserMenu
+          isLoggedIn={isLoggedIn}
+          userName={userName}
+          logout={logout}
+          showModal={showModal}
+        />
+      </AntHeader>
+
+      <Modal
+        title="Tìm kiếm"
+        open={isSearchModalVisible}
+        onCancel={() => setIsSearchModalVisible(false)}
+        footer={null}
+        style={{ top: 20 }}
+      >
+        {searchBar}
+      </Modal>
 
       <AuthModal
         isModalOpen={isModalOpen}
@@ -268,7 +306,7 @@ const Header = ({ onSearch }) => {
         setIsModalOpen={setIsModalOpen}
         setModalMode={setModalMode}
       />
-    </AntHeader>
+    </>
   );
 };
 
