@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [selectedLocationId, setSelectedLocationId] = useState(null); // Thêm state tìm kiếm
   const router = useRouter();
   const pathname = usePathname();
 
@@ -190,6 +191,8 @@ export const AuthProvider = ({ children }) => {
         checkAuthState,
         clearAuthData,
         isCheckingAuth,
+        selectedLocationId, // Cung cấp state tìm kiếm
+        setSelectedLocationId, // Cung cấp setter cho state tìm kiếm
       }}
     >
       {children}
