@@ -21,7 +21,7 @@ const AdminPage = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { isLoggedIn, isCheckingAuth, isModalOpen } = useAuth();
   const router = useRouter();
-  const screens = useBreakpoint(); // detect responsive
+  const screens = useBreakpoint(); 
 
   // Collapse menu nếu màn hình nhỏ hơn md
   useEffect(() => {
