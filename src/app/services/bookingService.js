@@ -17,7 +17,12 @@ export const getListLocations = () => {
 
 export const getAllLocations = async () => {
   const res = await api.get("/vi-tri");
-  return res.data; // res.data = { statusCode, content, ... }
+  return res.data;
+};
+
+export const getAllLocationsDashboard = async () => {
+  const res = await api.get("/vi-tri");
+  return res.data.content;
 };
 
 export const getRoomsByLocation = (maViTri) => {

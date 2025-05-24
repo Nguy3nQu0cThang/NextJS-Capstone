@@ -16,3 +16,8 @@ export const deleteAccount = async (userId) => {
     );
   }
 };
+
+export const getAllUsers = async () => {
+  const res = await http.get("/api/users");
+  return res.data.content;
+};

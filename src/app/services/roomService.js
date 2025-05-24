@@ -11,6 +11,19 @@ export const getAllRooms = () => {
     },
   });
 };
+export const getAllRoomsDashboard = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/phong-thue`, {
+      headers: {
+        TokenCybersoft: TOKEN_CYBERSOFT,
+      },
+    });
+    return res.data.content;
+  } catch (error) {
+    console.error("Lỗi khi gọi API /phong-thue:", error);
+    return [];
+  }
+};
 
 export const getRoomDetail = (id) => {
   return axios.get(`${BASE_URL}/phong-thue/${id}`, {
