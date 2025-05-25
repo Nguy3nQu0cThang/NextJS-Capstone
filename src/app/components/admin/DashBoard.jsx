@@ -80,12 +80,21 @@ const DashBoard = () => {
       return acc;
     }, {})
   );
-
+  const total = bookedRoomIds.size + availableRooms || 1;
+  console.log("Tổng:", total);
   const pieData = [
-    { type: "Đã đặt", value: bookedRoomIds.size },
-    { type: "Còn trống", value: availableRooms },
+    {
+      type: "Đã đặt",
+      value: bookedRoomIds.size,
+      percent: ((bookedRoomIds.size / total) * 100).toFixed(1),
+    },
+    {
+      type: "Còn trống",
+      value: availableRooms,
+      percent: ((availableRooms / total) * 100).toFixed(1),
+    },
   ];
-
+  console.log(pieData);
   const topRooms = Object.values(
     state.bookings.reduce((acc, cur) => {
       const roomId = cur.maPhong;
@@ -159,7 +168,28 @@ const DashBoard = () => {
                   angleField="value"
                   colorField="type"
                   height={300}
+                  label={false}
+                  tooltip={{
+                    formatter: (datum) => ({
+                      name: datum.type,
+                      value: `${datum.value} phòng`,
+                    }),
+                  }}
+                  legend={{ position: "top" }}
+                  statistic={false}
                 />
+                <div style={{ marginTop: 16 }}>
+                  {pieData.map((item) => (
+                    <div
+                      key={item.type}
+                      style={{ fontSize: 16, fontWeight: 500 }}
+                    >
+                      {item.type}:{" "}
+                      <span style={{ color: "#1890ff" }}>{item.percent}%</span>{" "}
+                      ({item.value} phòng)
+                    </div>
+                  ))}
+                </div>
               </Card>
             </Col>
           </Row>

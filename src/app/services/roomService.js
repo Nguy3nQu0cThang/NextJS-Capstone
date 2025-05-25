@@ -34,8 +34,7 @@ export const getRoomDetail = (id) => {
 };
 
 export const getRoomReviews = (roomId) => {
-  return axios.get(`${BASE_URL}/binh-luan/lay-binh-luan-theo-phong`, {
-    params: { maPhong: roomId },
+  return axios.get(`${BASE_URL}/binh-luan/lay-binh-luan-theo-phong/${roomId}`, {
     headers: {
       TokenCybersoft: TOKEN_CYBERSOFT,
     },
