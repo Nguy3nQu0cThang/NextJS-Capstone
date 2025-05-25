@@ -9,6 +9,7 @@ import RoomDetails from "app/components/rooms/RoomDetails";
 import RoomBookingCard from "app/components/rooms/RoomBookingCard";
 import RoomReviews from "app/components/rooms/RoomReviews";
 import RoomMap from "app/components/rooms/RoomMap";
+import RoomReviewForm from "app/components/rooms/RoomReviewForm";
 
 const RoomDetailPage = () => {
   const { id } = useParams();
@@ -58,6 +59,7 @@ const RoomDetailPage = () => {
           <RoomHeader room={roomData} />
           <RoomDetails room={roomData} />
           <RoomReviews roomId={roomData.id} />
+          <RoomReviewForm roomId={roomData.id} onSuccess={() => {}} />
           <RoomMap room={roomData} />
         </div>
 
