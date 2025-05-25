@@ -42,7 +42,30 @@ export const deleteRoomById = async (roomId) => {
   const response = await api.delete(`/phong-thue/${roomId}`);
   return response.data;
 };
+
+export const bookRoom = async (data) => {
+  try {
+    const res = await axios.post(`${BASE_URL}/dat-phong`, data, {
+      headers: {
+        TokenCybersoft: TOKEN_CYBERSOFT,
+      },
+    });
+    if (res.data.statusCode !== 201) {
+      throw new Error(res.data.message || "Đặt phòng thất bại");
+    }
+
+    return res.data;
+  } catch (err) {
+    console.error("Lỗi API bookRoom:", err.response?.data || err.message);
+    throw err;
+  }
+};
+
 export const getAllBookings = async () => {
   const response = await api.get("/dat-phong");
-  return response.data.content; 
+  return response.data.content;
+};
+
+export const getBookingsByUser = (userId) => {
+  return api.get(`${BASE_URL}/dat-phong/lay-theo-nguoi-dung/${userId}`);
 };
