@@ -40,10 +40,10 @@ const RoomBookingCard = ({ room }) => {
   return (
     <Card
       variant="outlined"
-      className="shadow-lg rounded-2xl p-6 sticky top-24"
-      bodyStyle={{ padding: 0 }}
+      className="shadow-lg rounded-2xl sticky top-24"
+      styles={{ body: { padding: 0 } }}
     >
-      <div className="space-y-4">
+      <div className="space-y-4 p-6">
         <div className="text-2xl font-semibold">
           {room.giaTien.toLocaleString()}₫{" "}
           <span className="text-base font-normal">/ đêm</span>

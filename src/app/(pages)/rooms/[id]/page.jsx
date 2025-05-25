@@ -26,6 +26,7 @@ const RoomDetailPage = () => {
       } finally {
         setLoading(false);
       }
+      console.log("room id:", id);
     };
 
     if (id) {
@@ -44,6 +45,7 @@ const RoomDetailPage = () => {
       </div>
     );
   }
+  console.log("roomData.id:", roomData?.id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
