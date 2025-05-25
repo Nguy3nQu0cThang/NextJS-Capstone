@@ -10,18 +10,20 @@ import BookingPriceBreakdown from "app/components/booking/BookingPriceBreakdown"
 import BookingRoomInfo from "app/components/booking/BookingRoomInfo";
 import BookingUserForm from "app/components/booking/BookingUserForm";
 import { getRoomDetail } from "app/services/roomService";
+import { useAuth } from "app/context/AuthContext";
 
 const BookingPage = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const [roomData, setRoomData] = useState(null);
-
+  const { userProfile } = useAuth();
   const roomId = params?.id;
   const checkin = searchParams.get("checkin");
   const checkout = searchParams.get("checkout");
   const numberOfGuests = parseInt(searchParams.get("numberOfGuests") || "1");
 
   useEffect(() => {
+    if (!roomId) return;
     const fetchRoom = async () => {
       try {
         const res = await getRoomDetail(roomId);
@@ -50,7 +52,7 @@ const BookingPage = () => {
           checkout={checkout}
           guests={numberOfGuests}
         />
-        <BookingUserForm />
+        <BookingUserForm user={userProfile}/>
         <BookingBusinessToggle />
       </div>
 
@@ -61,7 +63,13 @@ const BookingPage = () => {
           checkout={checkout}
           guests={numberOfGuests}
         />
-        <BookingConfirmButton />
+        <BookingConfirmButton
+          roomId={roomId}
+          checkin={checkin}
+          checkout={checkout}
+          guestCount={numberOfGuests}
+          userId={userProfile?.id}
+        />
       </div>
     </div>
   );

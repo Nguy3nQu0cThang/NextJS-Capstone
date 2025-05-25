@@ -18,6 +18,7 @@ import { http } from "app/utils/setting";
 import UpdateProfile from "app/components/User/UpdateProfile";
 import AvatarUpload from "app/components/User/AvatarUpload";
 import { deleteAccount } from "app/services/userService";
+import { getBookingsByUser } from "app/services/bookingService";
 
 const UserProfile = () => {
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,7 @@ const UserProfile = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
-
+  const [userBookings, setUserBookings] = useState([]);
   const router = useRouter();
 
   const {
@@ -104,6 +105,22 @@ const UserProfile = () => {
       getProfileAPI();
     }
   }, [userProfile?.id, loading]);
+
+  useEffect(() => {
+    const fetchUserBookings = async () => {
+      if (!userProfile?.id) return;
+
+      try {
+        const res = await getBookingsByUser(userProfile.id);
+        setUserBookings(res.data.content);
+      } catch (err) {
+        console.error("Lỗi khi lấy lịch sử đặt phòng:", err);
+        message.error("Không thể tải lịch sử đặt phòng.");
+      }
+    };
+
+    fetchUserBookings();
+  }, [userProfile?.id]);
 
   const handleDeleteAccount = () => {
     console.log("Test button");
@@ -259,7 +276,32 @@ const UserProfile = () => {
           </Descriptions.Item>
         </Descriptions>
       </Card>
-
+      {userBookings.length > 0 && (
+        <Card
+          title="Lịch sử đặt phòng"
+          style={{ marginTop: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+        >
+          {userBookings.map((booking) => (
+            <div key={booking.id} style={{ marginBottom: "12px" }}>
+              <p>
+                <strong>Mã phòng:</strong> {booking.maPhong}
+              </p>
+              <p>
+                <strong>Ngày đến:</strong>{" "}
+                {new Date(booking.ngayDen).toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Ngày đi:</strong>{" "}
+                {new Date(booking.ngayDi).toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Số lượng khách:</strong> {booking.soLuongKhach}
+              </p>
+              <hr />
+            </div>
+          ))}
+        </Card>
+      )}
       {modalVisible && (
         <UpdateProfile
           visible={modalVisible}
@@ -281,10 +323,10 @@ const UserProfile = () => {
             console.log("Delete account successful");
 
             clearAuthData();
-            const isAuthenticated = await checkAuthState(); 
+            const isAuthenticated = await checkAuthState();
             console.log("Auth state after delete:", { isAuthenticated });
 
-            setUserProfile(null); 
+            setUserProfile(null);
             message.success("Tài khoản đã được xóa thành công.");
 
             console.log("LocalStorage after clear:", localStorage);

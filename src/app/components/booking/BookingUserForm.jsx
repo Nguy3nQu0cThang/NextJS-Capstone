@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input, Form, message } from "antd";
 
-const BookingUserForm = () => {
+const BookingUserForm = ({ user }) => {
   const [form] = Form.useForm();
 
   const handleFinish = (values) => {
@@ -11,6 +11,15 @@ const BookingUserForm = () => {
     message.success("Thông tin đã được lưu (demo)");
   };
 
+  useEffect(() => {
+    if (user) {
+      form.setFieldsValue({
+        fullName: user.name || user.hoTen || "",
+        email: user.email || "",
+        phone: user.phone || user.soDt || "",
+      });
+    }
+  }, [user, form]);
   return (
     <div className="border rounded-xl p-4 shadow-sm">
       <h3 className="text-lg font-semibold mb-4">Thông tin người đặt</h3>
