@@ -44,7 +44,7 @@ http.interceptors.request.use((config) => {
     TokenCybersoft: TOKEN_CYBERSOFT,
   };
   if (token) {
-    config.headers.Authorization = token;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -82,7 +82,7 @@ http.interceptors.response.use(
               localStorage.setItem(TOKEN, newToken);
               localStorage.setItem("tokenExpiry", newExpiry.toString());
               const originalRequest = err.config;
-              originalRequest.headers.Authorization = newToken;
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
               return axios(originalRequest);
             } else {
               throw new Error("Không thể làm mới token.");

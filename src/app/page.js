@@ -18,7 +18,7 @@ export default function HomePage() {
         </div>
       </Content>
       <Footer style={{ textAlign: "center" }}>
-        Airbnb Clone ©{new Date().getFullYear()} Created by Thắng
+        Airbnb Clone ©{new Date().getFullYear()} Created by Nguyễn Quốc Thắng và Từ Triệu Dương
       </Footer>
     </Layout>
   );
