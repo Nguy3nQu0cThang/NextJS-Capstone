@@ -152,7 +152,7 @@ const Header = ({ onSearch }) => {
         trigger={["click"]}
         open={state.dateOpen}
         onOpenChange={() => dispatch({ type: "TOGGLE_DATE" })}
-        dropdownRender={() => (
+        popupRender={() => (
           <div
             style={{
               background: "#fff",
@@ -196,7 +196,7 @@ const Header = ({ onSearch }) => {
       <Dropdown
         open={state.guestOpen}
         onOpenChange={() => dispatch({ type: "TOGGLE_GUEST" })}
-        dropdownRender={() => (
+        popupRender={() => (
           <div
             style={{
               background: "#fff",

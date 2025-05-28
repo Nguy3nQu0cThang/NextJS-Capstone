@@ -1,23 +1,15 @@
-import axios from "axios";
-
-const BASE_URL = "https://airbnbnew.cybersoft.edu.vn/api";
-const TOKEN_CYBERSOFT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0";
+import { http } from "app/utils/setting";
+export const createRoom = (data) => {
+  return http.post("/api/phong-thue", data); 
+};
 
 export const getAllRooms = () => {
-  return axios.get(`${BASE_URL}/phong-thue`, {
-    headers: {
-      TokenCybersoft: TOKEN_CYBERSOFT,
-    },
-  });
+  return http.get("/api/phong-thue");
 };
+
 export const getAllRoomsDashboard = async () => {
   try {
-    const res = await axios.get(`${BASE_URL}/phong-thue`, {
-      headers: {
-        TokenCybersoft: TOKEN_CYBERSOFT,
-      },
-    });
+    const res = await http.get("/api/phong-thue");
     return res.data.content;
   } catch (error) {
     console.error("Lỗi khi gọi API /phong-thue:", error);
@@ -26,17 +18,17 @@ export const getAllRoomsDashboard = async () => {
 };
 
 export const getRoomDetail = (id) => {
-  return axios.get(`${BASE_URL}/phong-thue/${id}`, {
-    headers: {
-      TokenCybersoft: TOKEN_CYBERSOFT,
-    },
-  });
+  return http.get(`/api/phong-thue/${id}`);
+};
+
+export const deleteRoomById = (id) => {
+  return http.delete(`/phong-thue/${id}`);
+};
+
+export const updateRoomById = (id, data) => {
+  return http.put(`/phong-thue/${id}`, data);
 };
 
 export const getRoomReviews = (roomId) => {
-  return axios.get(`${BASE_URL}/binh-luan/lay-binh-luan-theo-phong/${roomId}`, {
-    headers: {
-      TokenCybersoft: TOKEN_CYBERSOFT,
-    },
-  });
+  return http.get(`/api/binh-luan/lay-binh-luan-theo-phong/${roomId}`);
 };

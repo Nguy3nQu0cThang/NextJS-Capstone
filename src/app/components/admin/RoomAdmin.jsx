@@ -9,13 +9,19 @@ import {
   message,
   Popconfirm,
   Tag,
+  Modal,
 } from "antd";
-import { SearchOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import {
   getAllRoomsPaging,
   deleteRoomById,
   getAllBookings,
 } from "app/services/bookingService";
+import RoomForm from "./form/RoomForm";
 
 const RoomAdmin = () => {
   const [rooms, setRooms] = useState([]);
@@ -24,6 +30,7 @@ const RoomAdmin = () => {
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchRooms = async (pageIndex, pageSize, keyword) => {
     setLoading(true);
@@ -122,7 +129,6 @@ const RoomAdmin = () => {
   return (
     <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
       <h2 style={{ marginBottom: 20 }}>Danh sách phòng</h2>
-
       <div
         style={{
           marginBottom: 20,
@@ -145,9 +151,15 @@ const RoomAdmin = () => {
           >
             Tìm kiếm
           </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            Thêm phòng
+          </Button>
         </div>
       </div>
-
       <Table
         columns={columns}
         dataSource={rooms}
@@ -156,7 +168,6 @@ const RoomAdmin = () => {
         pagination={false}
         scroll={{ x: "max-content" }}
       />
-
       <Pagination
         current={page}
         total={total}
@@ -166,6 +177,20 @@ const RoomAdmin = () => {
         pageSizeOptions={[10, 20, 50]}
         style={{ marginTop: 20, textAlign: "right" }}
       />
+      <Modal
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <RoomForm
+          onSuccess={() => {
+            setIsModalOpen(false);
+            fetchRooms(page, pageSize, keyword);
+          }}
+        />
+      </Modal>
+      ;
     </div>
   );
 };
