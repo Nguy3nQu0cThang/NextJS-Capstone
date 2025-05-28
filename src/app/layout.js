@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import "antd/dist/reset.css";
 import { useAuth } from "./context/AuthContext";
 import AppFooter from "./components/Footer";
+import '@ant-design/v5-patch-for-react-19';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
