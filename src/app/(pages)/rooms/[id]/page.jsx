@@ -20,14 +20,19 @@ const RoomDetailPage = () => {
     const fetchRoom = async () => {
       try {
         const res = await getRoomDetail(id);
-        console.log("Room data:", res.data.content);
-        setRoomData(res.data.content);
+
+        const room = res.data.content;
+        console.log("== Room raw data ==");
+        console.dir(room, { depth: null }); // 👈 In toàn bộ object phòng
+
+        setRoomData(room);
       } catch (error) {
         console.error("Lỗi lấy chi tiết phòng:", error);
       } finally {
         setLoading(false);
       }
-      console.log("room id:", id);
+
+      console.log("Room ID:", id); // 👈 Kiểm tra id
     };
 
     if (id) {
@@ -46,6 +51,7 @@ const RoomDetailPage = () => {
       </div>
     );
   }
+
   console.log("roomData.id:", roomData?.id);
 
   return (

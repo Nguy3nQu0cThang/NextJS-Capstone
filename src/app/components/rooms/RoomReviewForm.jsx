@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input, Button, Rate, message } from "antd";
 import { useAuth } from "app/context/AuthContext";
-import { postRoomReview } from "app/services/userService";
+import { postRoomReview } from "app/services/roomService";
 
 const RoomReviewForm = ({ roomId, onSuccess }) => {
   const { userProfile } = useAuth();

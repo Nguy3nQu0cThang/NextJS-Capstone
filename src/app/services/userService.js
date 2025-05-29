@@ -25,13 +25,3 @@ export const getAllUsers = async () => {
   return res.data.content;
 };
 
-export const postRoomReview = (data) => {
-  const token = localStorage.getItem("token"); 
-  console.log("TOKEN gửi đi:", token);
-  return http.post("https://airbnbnew.cybersoft.edu.vn/api/binh-luan", data, {
-    headers: {
-      TokenCybersoft: TOKEN_CYBERSOFT,
-      Authorization: `Bearer ${token}`, 
-    },
-  });
-};
