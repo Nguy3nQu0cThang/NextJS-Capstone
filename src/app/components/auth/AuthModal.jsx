@@ -56,7 +56,7 @@ const AuthModal = ({
       open={isModalOpen}
       onCancel={handleCancel}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       {modalMode === "login" ? (
         <Login onSuccess={handleSuccessLogin} initialValues={initialValues} />
