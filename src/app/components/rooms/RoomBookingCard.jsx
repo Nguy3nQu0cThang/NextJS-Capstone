@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import locale from "antd/es/date-picker/locale/vi_VN";
 import { useRouter } from "next/navigation";
+import { useAuth } from "app/context/AuthContext";
 
 const { RangePicker } = DatePicker;
 
@@ -14,23 +15,32 @@ const RoomBookingCard = ({ room }) => {
   const [guests, setGuests] = useState(1);
   const router = useRouter();
 
+  const { isLoggedIn, showModal } = useAuth(); // Lấy trạng thái đăng nhập
+
   const handleBooking = () => {
+    if (!isLoggedIn) {
+      message.warning("Bạn cần đăng nhập trước khi đặt phòng!");
+      // Nếu bạn có modal đăng nhập, gọi showModal("login") hoặc chuyển trang login
+      showModal("login");
+      return;
+    }
+
     if (dates.length !== 2) {
       message.error("Vui lòng chọn ngày nhận và trả phòng.");
       return;
     }
 
+    const checkIn = dayjs(dates[0]).format("YYYY-MM-DD");
+    const checkOut = dayjs(dates[1]).format("YYYY-MM-DD");
+
     console.log("Đặt phòng:", {
       roomId: room.id,
-      checkIn: dayjs(dates[0]).format("YYYY-MM-DD"),
-      checkOut: dayjs(dates[1]).format("YYYY-MM-DD"),
+      checkIn,
+      checkOut,
       guests,
     });
 
     message.success("Đặt phòng thành công (mô phỏng)!");
-
-    const checkIn = dayjs(dates[0]).format("YYYY-MM-DD");
-    const checkOut = dayjs(dates[1]).format("YYYY-MM-DD");
 
     router.push(
       `/booking/${room.id}?checkin=${checkIn}&checkout=${checkOut}&numberOfGuests=${guests}`

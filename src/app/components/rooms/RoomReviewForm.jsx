@@ -6,12 +6,20 @@ import { useAuth } from "app/context/AuthContext";
 import { postRoomReview } from "app/services/roomService";
 
 const RoomReviewForm = ({ roomId, onSuccess }) => {
-  const { userProfile } = useAuth();
+  const { userProfile, isLoggedIn, showModal } = useAuth(); // Lấy trạng thái đăng nhập và modal
+
   const [noiDung, setNoiDung] = useState("");
   const [saoBinhLuan, setSaoBinhLuan] = useState(5);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    // Nếu chưa đăng nhập
+    if (!isLoggedIn) {
+      message.warning("Bạn cần đăng nhập để gửi bình luận.");
+      showModal("login"); // Mở modal đăng nhập
+      return;
+    }
+
     if (!noiDung.trim()) {
       return message.error("Nội dung không được để trống.");
     }
