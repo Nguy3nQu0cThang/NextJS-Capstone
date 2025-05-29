@@ -7,16 +7,16 @@ import { useAuth } from "app/context/AuthContext";
 
 const Login = ({ onSuccess, initialValues = { email: "", password: "" } }) => {
   const [form] = Form.useForm();
-  const { login } = useAuth();
-  const [errorMessage, setErrorMessage] = useState(""); // State để lưu thông báo lỗi
+  const { login, showModal } = useAuth(); // 👉 lấy thêm showModal
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    form.setFieldsValue(initialValues); // Điền dữ liệu khi có initialValues
+    form.setFieldsValue(initialValues);
   }, [initialValues, form]);
 
   const onFinish = async (values) => {
     try {
-      setErrorMessage(""); // Xóa thông báo lỗi trước khi gửi request mới
+      setErrorMessage("");
       const response = await http.post("/api/auth/signin", values);
       const { content } = response.data;
 
@@ -26,7 +26,7 @@ const Login = ({ onSuccess, initialValues = { email: "", password: "" } }) => {
 
         await login(username, content.token, profile);
         form.resetFields();
-        localStorage.removeItem("tempPassword"); // Xóa password sau khi đăng nhập thành công
+        localStorage.removeItem("tempPassword");
         onSuccess(username);
       } else {
         throw new Error("Không tìm thấy token trong phản hồi.");
@@ -34,14 +34,12 @@ const Login = ({ onSuccess, initialValues = { email: "", password: "" } }) => {
     } catch (error) {
       let errorMsg = "Đăng nhập thất bại!";
       if (error.response?.data) {
-        // Ưu tiên hiển thị content nếu có, nếu không dùng message
         errorMsg =
           error.response.data.content ||
           error.response.data.message ||
           errorMsg;
       }
-      setErrorMessage(errorMsg); // Lưu thông báo lỗi vào state
-      
+      setErrorMessage(errorMsg);
     }
   };
 
@@ -89,6 +87,21 @@ const Login = ({ onSuccess, initialValues = { email: "", password: "" } }) => {
           </p>
         )}
       </Form>
+
+      {/* ✅ Thêm phần "Đăng ký" */}
+      <div style={{ textAlign: "center", marginTop: "16px" }}>
+        <span>Bạn chưa có tài khoản? </span>
+        <span
+          onClick={() => showModal("register")}
+          style={{
+            color: "#1890ff",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          Đăng ký
+        </span>
+      </div>
     </div>
   );
 };
