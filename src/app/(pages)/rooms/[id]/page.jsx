@@ -55,24 +55,27 @@ const RoomDetailPage = () => {
   console.log("roomData.id:", roomData?.id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="relative w-full h-auto overflow-hidden">
-        <RoomGallery images={[roomData.hinhAnh]} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-        <div className="md:col-span-2 space-y-6">
-          <RoomHeader room={roomData} />
-          <RoomDetails room={roomData} />
-          <RoomReviews roomId={roomData.id} />
-          <RoomReviewForm roomId={roomData.id} onSuccess={() => {}} />
-          <RoomMap room={roomData} />
+    <div className="container mx-auto">
+      Hello
+      {/* <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="relative w-full h-auto overflow-hidden">
+          <RoomGallery images={[roomData.hinhAnh]} />
         </div>
 
-        <div className="md:col-span-1">
-          <RoomBookingCard room={roomData} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          <div className="md:col-span-2 space-y-6">
+            <RoomHeader room={roomData} />
+            <RoomDetails room={roomData} />
+            <RoomReviews roomId={roomData.id} />
+            <RoomReviewForm roomId={roomData.id} onSuccess={() => {}} />
+            <RoomMap room={roomData} />
+          </div>
+
+          <div className="md:col-span-1">
+            <RoomBookingCard room={roomData} />
+          </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

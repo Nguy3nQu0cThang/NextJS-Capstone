@@ -1,14 +1,14 @@
 "use client";
 
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
-import "antd/dist/reset.css";
 import { useAuth } from "./context/AuthContext";
 import AppFooter from "./components/Footer";
-import '@ant-design/v5-patch-for-react-19';
+import "antd/dist/reset.css";
+import "@/app/globals.css"; 
 import "leaflet/dist/leaflet.css";
+import "@ant-design/v5-patch-for-react-19";
 
 
 const geistSans = Geist({
