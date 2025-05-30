@@ -22,11 +22,14 @@ import { getBookingsByUser } from "app/services/bookingService";
 
 const UserProfile = () => {
   const [loading, setLoading] = useState(true);
+  const [loadingRooms, setLoadingRooms] = useState(true);
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [userBookings, setUserBookings] = useState([]);
+  const [roomDetails, setRoomDetails] = useState({});
+  const [locationDetails, setLocationDetails] = useState({});
   const router = useRouter();
 
   const {
@@ -110,12 +113,67 @@ const UserProfile = () => {
     const fetchUserBookings = async () => {
       if (!userProfile?.id) return;
 
+      setLoadingRooms(true);
       try {
         const res = await getBookingsByUser(userProfile.id);
-        setUserBookings(res.data.content);
+        const bookings = res.data.content;
+        setUserBookings(bookings);
+
+        // Lấy chi tiết phòng
+        const roomPromises = bookings.map(async (booking) => {
+          try {
+            const roomRes = await http.get(
+              `https://airbnbnew.cybersoft.edu.vn/api/phong-thue/${booking.maPhong}`
+            );
+            return { maPhong: booking.maPhong, ...roomRes.data.content };
+          } catch (err) {
+            console.error(
+              `Lỗi khi lấy chi tiết phòng ${booking.maPhong}:`,
+              err
+            );
+            return {
+              maPhong: booking.maPhong,
+              error: "Không lấy được thông tin phòng",
+            };
+          }
+        });
+
+        const rooms = await Promise.all(roomPromises);
+        const roomDetailsMap = rooms.reduce((acc, room) => {
+          acc[room.maPhong] = room;
+          return acc;
+        }, {});
+        setRoomDetails(roomDetailsMap);
+
+        // Lấy chi tiết vị trí từ maViTri
+        const locationPromises = rooms
+          .filter((room) => room.maViTri && !room.error)
+          .map(async (room) => {
+            try {
+              const locationRes = await http.get(
+                `https://airbnbnew.cybersoft.edu.vn/api/vi-tri/${room.maViTri}`
+              );
+              return { maViTri: room.maViTri, ...locationRes.data.content };
+            } catch (err) {
+              console.error(`Lỗi khi lấy vị trí ${room.maViTri}:`, err);
+              return {
+                maViTri: room.maViTri,
+                error: "Không lấy được thông tin vị trí",
+              };
+            }
+          });
+
+        const locations = await Promise.all(locationPromises);
+        const locationDetailsMap = locations.reduce((acc, location) => {
+          acc[location.maViTri] = location;
+          return acc;
+        }, {});
+        setLocationDetails(locationDetailsMap);
       } catch (err) {
         console.error("Lỗi khi lấy lịch sử đặt phòng:", err);
         message.error("Không thể tải lịch sử đặt phòng.");
+      } finally {
+        setLoadingRooms(false);
       }
     };
 
@@ -123,7 +181,6 @@ const UserProfile = () => {
   }, [userProfile?.id]);
 
   const handleDeleteAccount = () => {
-    console.log("Test button");
     setConfirmVisible(true);
   };
 
@@ -276,32 +333,58 @@ const UserProfile = () => {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
       {userBookings.length > 0 && (
         <Card
           title="Lịch sử đặt phòng"
           style={{ marginTop: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
         >
-          {userBookings.map((booking) => (
-            <div key={booking.id} style={{ marginBottom: "12px" }}>
-              <p>
-                <strong>Mã phòng:</strong> {booking.maPhong}
-              </p>
-              <p>
-                <strong>Ngày đến:</strong>{" "}
-                {new Date(booking.ngayDen).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Ngày đi:</strong>{" "}
-                {new Date(booking.ngayDi).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Số lượng khách:</strong> {booking.soLuongKhach}
-              </p>
-              <hr />
+          {loadingRooms ? (
+            <div style={{ textAlign: "center", margin: "16px 0" }}>
+              <Spin size="large" />
+              <p style={{ marginTop: "8px" }}>Đang tải lịch sử đặt phòng...</p>
             </div>
-          ))}
+          ) : (
+            userBookings.map((booking) => {
+              const room = roomDetails[booking.maPhong] || {};
+              const location = room.maViTri
+                ? locationDetails[room.maViTri]
+                : {};
+              return (
+                <div key={booking.id} style={{ marginBottom: "12px" }}>
+                  <p>
+                    <strong>Tên phòng:</strong> {room.tenPhong || "Đang tải..."}
+                  </p>
+                  <p>
+                    <strong>Vị trí:</strong>{" "}
+                    {location.tenViTri
+                      ? `${location.tenViTri}, ${location.tinhThanh}, ${location.quocGia}`
+                      : "Không có thông tin vị trí"}
+                  </p>
+                  <p>
+                    <strong>Ngày đến:</strong>{" "}
+                    {new Date(booking.ngayDen).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Ngày đi:</strong>{" "}
+                    {new Date(booking.ngayDi).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Số lượng khách:</strong> {booking.soLuongKhach}
+                  </p>
+                  {(room.error || location.error) && (
+                    <p style={{ color: "red" }}>
+                      {room.error || location.error}
+                    </p>
+                  )}
+                  <hr />
+                </div>
+              );
+            })
+          )}
         </Card>
       )}
+
       {modalVisible && (
         <UpdateProfile
           visible={modalVisible}
@@ -316,24 +399,15 @@ const UserProfile = () => {
         title="Xác nhận xóa tài khoản"
         open={confirmVisible}
         onOk={async () => {
-          console.log("Test API");
           try {
             setDeleting(true);
             await deleteAccount(userProfile.id);
-            console.log("Delete account successful");
-
             clearAuthData();
-            const isAuthenticated = await checkAuthState();
-            console.log("Auth state after delete:", { isAuthenticated });
-
+            await checkAuthState();
             setUserProfile(null);
             message.success("Tài khoản đã được xóa thành công.");
-
-            console.log("LocalStorage after clear:", localStorage);
-
             router.push("/");
           } catch (error) {
-            console.error("Delete account error:", error);
             message.error(
               error.message || "Đã có lỗi xảy ra khi xóa tài khoản."
             );
