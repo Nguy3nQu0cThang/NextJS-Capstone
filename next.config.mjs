@@ -3,6 +3,7 @@ const nextConfig = {
   images: {
     domains: ["airbnbnew.cybersoft.edu.vn"],
   },
+  plugins: { "@tailwindcss/postcss": {} },
 };
 
 export default nextConfig;
