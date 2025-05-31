@@ -49,7 +49,12 @@ const RoomMap = ({ room }) => {
     }
   }, [room?.maViTri]);
 
-  if (loading) return <Spin tip="Đang tải bản đồ..." />;
+  if (loading)
+  return (
+    <Spin tip="Đang tải bản đồ...">
+      <div style={{ height: 200 }} /> {/* hoặc bất kỳ chiều cao placeholder nào */}
+    </Spin>
+  );
 
   if (!coordinates) {
     return <p className="text-gray-500">Không có toạ độ để hiển thị bản đồ.</p>;
