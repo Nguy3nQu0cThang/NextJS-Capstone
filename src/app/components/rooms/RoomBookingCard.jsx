@@ -15,7 +15,7 @@ const RoomBookingCard = ({ room }) => {
   const [guests, setGuests] = useState(1);
   const router = useRouter();
 
-  const { isLoggedIn, showModal } = useAuth(); 
+  const { isLoggedIn, showModal } = useAuth();
 
   const handleBooking = () => {
     if (!isLoggedIn) {

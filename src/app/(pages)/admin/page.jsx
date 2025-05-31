@@ -6,6 +6,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   CalendarOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import AdminUsersTable from "app/components/admin/AdminUsersTable";
@@ -46,6 +47,11 @@ const AdminPage = () => {
       label: collapsed ? null : "Quản lý người dùng",
     },
     {
+      key: "room",
+      icon: <HomeOutlined />,
+      label: collapsed ? null : "Quản lý phòng",
+    },
+    {
       key: "booking",
       icon: <CalendarOutlined />,
       label: collapsed ? null : "Quản lý đặt chỗ",
@@ -61,6 +67,8 @@ const AdminPage = () => {
     switch (selectedKey) {
       case "user":
         return <AdminUsersTable />;
+      case "room":
+        return <RoomAdmin />;
       case "booking":
         return <RoomAdmin />;
       case "dashboard":
