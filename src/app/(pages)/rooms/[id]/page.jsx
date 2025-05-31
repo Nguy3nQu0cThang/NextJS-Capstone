@@ -55,7 +55,7 @@ const RoomDetailPage = () => {
   console.log("roomData.id:", roomData?.id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 container">
       <div className="relative w-full h-auto overflow-hidden">
         <RoomGallery images={[roomData.hinhAnh]} />
       </div>
