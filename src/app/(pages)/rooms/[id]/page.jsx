@@ -23,7 +23,7 @@ const RoomDetailPage = () => {
 
         const room = res.data.content;
         console.log("== Room raw data ==");
-        console.dir(room, { depth: null }); // 👈 In toàn bộ object phòng
+        console.dir(room, { depth: null });
 
         setRoomData(room);
       } catch (error) {
@@ -32,7 +32,7 @@ const RoomDetailPage = () => {
         setLoading(false);
       }
 
-      console.log("Room ID:", id); // 👈 Kiểm tra id
+      console.log("Room ID:", id); 
     };
 
     if (id) {
