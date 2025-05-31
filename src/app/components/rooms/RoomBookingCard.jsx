@@ -39,7 +39,7 @@ const RoomBookingCard = ({ room }) => {
       guests,
     });
 
-    message.success("Đặt phòng thành công (mô phỏng)!");
+    message.success("Đang chuyển tới trang đặt phòng!");
 
     router.push(
       `/booking/${room.id}?checkin=${checkIn}&checkout=${checkOut}&numberOfGuests=${guests}`
