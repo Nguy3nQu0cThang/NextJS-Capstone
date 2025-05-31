@@ -64,7 +64,6 @@ const RoomDetailPage = () => {
           <RoomHeader room={roomData} />
           <RoomDetails room={roomData} />
           <RoomReviews roomId={roomData.id} />
-          <RoomReviewForm roomId={roomData.id} onSuccess={() => {}} />
           <RoomMap room={roomData} />
         </div>
 
