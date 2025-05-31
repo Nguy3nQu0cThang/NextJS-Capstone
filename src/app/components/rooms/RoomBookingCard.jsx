@@ -15,12 +15,11 @@ const RoomBookingCard = ({ room }) => {
   const [guests, setGuests] = useState(1);
   const router = useRouter();
 
-  const { isLoggedIn, showModal } = useAuth(); // Lấy trạng thái đăng nhập
+  const { isLoggedIn, showModal } = useAuth(); 
 
   const handleBooking = () => {
     if (!isLoggedIn) {
       message.warning("Bạn cần đăng nhập trước khi đặt phòng!");
-      // Nếu bạn có modal đăng nhập, gọi showModal("login") hoặc chuyển trang login
       showModal("login");
       return;
     }
