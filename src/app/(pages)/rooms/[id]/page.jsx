@@ -17,8 +17,8 @@ const RoomDetailPage = () => {
   const [roomData, setRoomData] = useState(null);
   const [loading, setLoading] = useState(true);
   const RoomMap = dynamic(() => import("app/components/rooms/RoomMap"), {
-  ssr: false,
-});
+    ssr: false,
+  });
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -60,20 +60,19 @@ const RoomDetailPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-8">
-    <div className="space-y-6 pb-20">
-      <RoomHeader room={roomData} />
-      <RoomDetails room={roomData} />
-      <RoomReviews roomId={roomData.id} />
-      <RoomReviewForm roomId={roomData.id} onSuccess={() => {}} />
-      <RoomMap room={roomData} />
-    </div>
+        <div className="space-y-6 pb-20">
+          <RoomHeader room={roomData} />
+          <RoomDetails room={roomData} />
+          <RoomReviews roomId={roomData.id} />
+          <RoomMap room={roomData} />
+        </div>
 
-    <div className="relative">
-      <div className="sticky top-24">
-        <RoomBookingCard room={roomData} />
+        <div className="relative">
+          <div className="sticky top-24">
+            <RoomBookingCard room={roomData} />
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
     </div>
   );
 };
