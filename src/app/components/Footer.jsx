@@ -76,8 +76,8 @@ const AppFooter = () => {
   ];
 
   return (
-    <Footer style={{ background: "#f9f9f9", padding: "40px" }}>
-      <Row gutter={[32, 24]}>
+    <Footer style={{ background: "#f9f9f9", padding: "40px" }} className="app-footer">
+      <Row className="footer-columns" gutter={[32, 24]}>
         {footerData.map((col) => (
           <Col xs={24} sm={12} md={6} key={col.title}>
             <Title level={5}>{col.title}</Title>
@@ -92,10 +92,10 @@ const AppFooter = () => {
         ))}
       </Row>
 
-      <Divider style={{ margin: "32px 0" }} />
+      <Divider className="footer-divider" style={{ margin: "32px 0" }} />
 
-      <Row justify="space-between" align="middle">
-        <Col xs={24} md={12}>
+      <Row className="footer-bottom" justify="space-between" align="middle">
+        <Col xs={24} md={12} className="footer-left">
           <Text type="secondary">
             © {new Date().getFullYear()} Airbnb Clone Created by Nguyễn Quốc
             Thắng và Từ Triệu Dương{" "}
@@ -104,7 +104,7 @@ const AppFooter = () => {
           </Text>
         </Col>
 
-        <Col xs={24} md={12} style={{ textAlign: "right" }}>
+        <Col xs={24} md={12} style={{ textAlign: "right" }} className="footer-right">
           <Space size="large">
             <Text>
               <GlobalOutlined /> English (US)
