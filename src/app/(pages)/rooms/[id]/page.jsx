@@ -69,9 +69,9 @@ const RoomDetailPage = () => {
           <RoomMap room={roomData} />
         </div>
 
-        <div className="md:col-span-1">
-          <RoomBookingCard room={roomData} />
-        </div>
+          <div className="md:col-span-1">
+            <RoomBookingCard room={roomData} />
+          </div>
       </div>
     </div>
   );
