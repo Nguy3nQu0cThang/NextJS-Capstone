@@ -13,6 +13,7 @@ const RoomReviews = ({ roomId, user }) => {
   const fetchReviews = async () => {
     setLoading(true);
     try {
+      console.log("Fetching reviews for roomId:", roomId);
       const res = await getRoomReviews(roomId);
       const sortedReviews = (res.data.content || []).sort(
         (a, b) => new Date(b.ngayBinhLuan) - new Date(a.ngayBinhLuan)
@@ -53,23 +54,23 @@ const RoomReviews = ({ roomId, user }) => {
   };
 
   return (
-    <div className="mt-10 px-4">
-      <div className="w-full max-w-3xl mx-auto">
-        <h2 className="text-[20px] sm:text-[18px] font-bold mb-6 sm:mb-4">
+    <div className="mt-10 px-4 md:px-2">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-xl md:text-2xl font-semibold text-primary mb-6">
           Đánh giá từ khách hàng ({reviews.length})
         </h2>
 
         {loading ? (
-          <Spin className="block mx-auto my-6" />
+          <Spin className="block my-6 mx-auto" />
         ) : reviews.length === 0 ? (
-          <p>Chưa có bình luận nào.</p>
+          <p className="text-gray-600">Chưa có bình luận nào.</p>
         ) : (
           <List
             className="mb-6"
             itemLayout="horizontal"
             dataSource={visibleReviews}
             renderItem={(review) => (
-              <List.Item className="sm:py-2">
+              <List.Item className="py-2 md:py-3">
                 <List.Item.Meta
                   avatar={
                     review.avatar ? (
@@ -88,8 +89,8 @@ const RoomReviews = ({ roomId, user }) => {
                   }
                   description={
                     <div>
-                      <p className="text-sm">{review.noiDung}</p>
-                      <div className="text-xs text-gray-500 mt-1 sm:text-[11px]">
+                      <p className="text-sm md:text-base">{review.noiDung}</p>
+                      <div className="text-xs text-gray-500 mt-1">
                         {formatDate(review.ngayBinhLuan)}
                       </div>
                     </div>
@@ -104,8 +105,8 @@ const RoomReviews = ({ roomId, user }) => {
           <div className="text-center">
             <Button
               type="primary"
-              block
               size="large"
+              className="bg-primary border-primary hover:bg-primaryHover hover:border-primaryHover rounded-lg w-full md:w-auto"
               onClick={handleLoadMore}
             >
               Xem thêm bình luận

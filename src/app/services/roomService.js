@@ -34,12 +34,5 @@ export const getRoomReviews = (roomId) => {
 };
 
 export const postRoomReview = (data) => {
-  const token = localStorage.getItem("token");
-  console.log("TOKEN gửi đi:", token);
-  return http.post("https://airbnbnew.cybersoft.edu.vn/api/binh-luan", data, {
-    headers: {
-      TokenCybersoft: TOKEN_CYBERSOFT,
-      token: token,
-    },
-  });
+  return http.post(`/api/binh-luan`, data);
 };

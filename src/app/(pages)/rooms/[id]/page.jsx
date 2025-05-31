@@ -9,13 +9,15 @@ import RoomDetails from "app/components/rooms/RoomDetails";
 import RoomBookingCard from "app/components/rooms/RoomBookingCard";
 import RoomReviews from "app/components/rooms/RoomReviews";
 import dynamic from "next/dynamic";
-import RoomReviewForm from "app/components/rooms/RoomReviewForm";
 import { Spin } from "antd";
+import { useAuth } from "app/context/AuthContext";
 
 const RoomDetailPage = () => {
   const { id } = useParams();
   const [roomData, setRoomData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { userProfile } = useAuth();
+
   const RoomMap = dynamic(() => import("app/components/rooms/RoomMap"), {
     ssr: false,
   });
@@ -38,9 +40,8 @@ const RoomDetailPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <Spin size="large">
-          <div className="text-gray-500 mt-4">Đang tải dữ liệu phòng...</div>
-        </Spin>
+        <Spin size="large" />
+        <div className="text-gray-500 mt-4">Đang tải dữ liệu phòng...</div>
       </div>
     );
   }
@@ -63,7 +64,7 @@ const RoomDetailPage = () => {
         <div className="space-y-6 pb-20">
           <RoomHeader room={roomData} />
           <RoomDetails room={roomData} />
-          <RoomReviews roomId={roomData.id} />
+          <RoomReviews roomId={roomData.id} user={userProfile} />
           <RoomMap room={roomData} />
         </div>
 

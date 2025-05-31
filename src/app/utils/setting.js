@@ -42,6 +42,7 @@ http.interceptors.request.use((config) => {
   config.headers = {
     ...config.headers,
     TokenCybersoft: TOKEN_CYBERSOFT,
+    token: token,
   };
   if (token) {
     config.headers.Authorization = token;
