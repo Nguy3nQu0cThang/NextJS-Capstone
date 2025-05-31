@@ -52,7 +52,7 @@ const RoomMap = ({ room }) => {
   if (loading)
   return (
     <Spin tip="Đang tải bản đồ...">
-      <div style={{ height: 200 }} /> {/* hoặc bất kỳ chiều cao placeholder nào */}
+      <div style={{ height: 200 }} /> 
     </Spin>
   );
 
