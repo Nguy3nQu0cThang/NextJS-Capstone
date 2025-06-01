@@ -6,7 +6,7 @@ import { GlobalOutlined, MenuOutlined, UserOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { useAuth } from "app/context/AuthContext";
 
-const UserMenu = ({ isLoggedIn, userName, showModal }) => {
+const UserMenu = ({ isLoggedIn, showModal }) => {
   const router = useRouter();
   const { logout, userProfile } = useAuth();
 
@@ -48,7 +48,7 @@ const UserMenu = ({ isLoggedIn, userName, showModal }) => {
     <div className="user-menu">
       <span className="booking-text">Booking</span>
       <GlobalOutlined className="global-icon" />
-      {isLoggedIn && userName && <div className="user-name">{userProfile.name}</div>}
+      {isLoggedIn && <div className="user-name">{userProfile.name}</div>}
       <Dropdown
         menu={{ items: menuItems, onClick: handleMenuClick }}
         trigger={["click"]}
