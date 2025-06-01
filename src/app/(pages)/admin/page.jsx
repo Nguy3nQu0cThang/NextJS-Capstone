@@ -13,6 +13,7 @@ import AdminUsersTable from "app/components/admin/AdminUsersTable";
 import RoomAdmin from "@/app/components/admin/RoomAdmin/RoomAdmin";
 import DashBoard from "app/components/admin/DashBoard";
 import { useAuth } from "app/context/AuthContext";
+import LocationAdmin from "@/app/components/admin/LocationAdmin";
 import BookingAdmin from "@/app/components/admin/BookingAdmin/BookingAdmin";
 
 const { Sider, Content } = Layout;
@@ -58,6 +59,11 @@ const AdminPage = () => {
       label: collapsed ? null : "Quản lý đặt chỗ",
     },
     {
+      key: "location",
+      icon: <CalendarOutlined />,
+      label: collapsed ? null : "Quản lý vị trí",
+    },
+    {
       key: "dashboard",
       icon: <DashboardOutlined />,
       label: collapsed ? null : "Dashboard",
@@ -74,6 +80,8 @@ const AdminPage = () => {
         return <BookingAdmin />;
       case "dashboard":
         return <DashBoard />;
+      case "location":
+        return <LocationAdmin />;
       default:
         return <AdminUsersTable />;
     }
