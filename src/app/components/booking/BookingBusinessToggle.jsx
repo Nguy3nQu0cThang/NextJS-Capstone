@@ -12,7 +12,7 @@ const BookingBusinessToggle = () => {
   };
 
   return (
-    <div className="border rounded-xl p-4 shadow-sm">
+    <div className="border border-gray-200 rounded-xl p-4 shadow-sm">
       <Checkbox checked={isWorkTrip} onChange={handleChange}>
         Tôi đang đi công tác
       </Checkbox>

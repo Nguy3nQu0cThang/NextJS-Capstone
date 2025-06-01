@@ -118,7 +118,7 @@ const DashBoard = () => {
   ];
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="p-4 md:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <h2 style={{ marginBottom: 20 }}>Dashboard</h2>
 
       {state.loading ? (
@@ -126,23 +126,23 @@ const DashBoard = () => {
       ) : (
         <>
           {/* Cards */}
-          <Row gutter={16} style={{ marginBottom: 24 }}>
-            <Col span={6}>
+          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Col xs={24} sm={12} md={6}>
               <Card title="Người dùng" variant="borderless">
                 {totalUsers}
               </Card>
             </Col>
-            <Col span={6}>
+            <Col xs={24} sm={12} md={6}>
               <Card title="Phòng" variant="borderless">
                 {totalRooms}
               </Card>
             </Col>
-            <Col span={6}>
+            <Col xs={24} sm={12} md={6}>
               <Card title="Đơn đặt" variant="borderless">
                 {totalBookings}
               </Card>
             </Col>
-            <Col span={6}>
+            <Col xs={24} sm={12} md={6}>
               <Card title="Phòng còn trống" variant="borderless">
                 <Tag color="green">{availableRooms}</Tag>
               </Card>
@@ -150,8 +150,8 @@ const DashBoard = () => {
           </Row>
 
           {/* Charts */}
-          <Row gutter={16}>
-            <Col span={12}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
               <Card title="Lượt đặt phòng theo ngày">
                 <Column
                   data={chartDataByDate}
@@ -161,7 +161,7 @@ const DashBoard = () => {
                 />
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <Card title="Tỉ lệ phòng đã đặt">
                 <Pie
                   data={pieData}
@@ -178,15 +178,12 @@ const DashBoard = () => {
                   legend={{ position: "top" }}
                   statistic={false}
                 />
-                <div style={{ marginTop: 16 }}>
+                <div className="mt-4 space-y-1">
                   {pieData.map((item) => (
-                    <div
-                      key={item.type}
-                      style={{ fontSize: 16, fontWeight: 500 }}
-                    >
+                    <div key={item.type} className="text-base font-medium">
                       {item.type}:{" "}
-                      <span style={{ color: "#1890ff" }}>{item.percent}%</span>{" "}
-                      ({item.value} phòng)
+                      <span className="text-blue-600">{item.percent}%</span> (
+                      {item.value} phòng)
                     </div>
                   ))}
                 </div>
@@ -207,27 +204,29 @@ const DashBoard = () => {
             />
           </Card>
           <TopLocations />
-          <Column
-            title="Lượt đặt phòng trong năm"
-            data={chartDataByMonth}
-            xField="month"
-            yField="count"
-            height={300}
-            tooltip={{
-              formatter: (d) => ({ name: "Lượt đặt", value: d.count }),
-            }}
-            label={{ position: "top" }}
-            xAxis={{
-              label: { autoHide: true, autoRotate: false },
-            }}
-          />
-          <Row gutter={16} style={{ marginTop: 20 }}>
-            <Col span={12}>
+          <Card title="Lượt đặt phòng trong năm" style={{ marginTop: 24 }}>
+            <Column
+              data={chartDataByMonth}
+              xField="month"
+              yField="count"
+              height={300}
+              tooltip={{
+                formatter: (d) => ({ name: "Lượt đặt", value: d.count }),
+              }}
+              label={{ position: "top" }}
+              xAxis={{
+                label: { autoHide: true, autoRotate: false },
+              }}
+            />
+          </Card>
+
+          <Row gutter={[16, 16]} className="mt-5">
+            <Col xs={24} md={12}>
               <Card title="📈 Tháng cao điểm">
                 {peakMonth?.month}: <strong>{peakMonth?.count}</strong> lượt đặt
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <Card title="📉 Tháng thấp điểm">
                 {lowMonth?.month}: <strong>{lowMonth?.count}</strong> lượt đặt
               </Card>
