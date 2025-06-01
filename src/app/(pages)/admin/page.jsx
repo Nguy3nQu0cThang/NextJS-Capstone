@@ -10,9 +10,10 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import AdminUsersTable from "app/components/admin/AdminUsersTable";
-import RoomAdmin from "app/components/admin/RoomAdmin";
+import RoomAdmin from "@/app/components/admin/RoomAdmin/RoomAdmin";
 import DashBoard from "app/components/admin/DashBoard";
 import { useAuth } from "app/context/AuthContext";
+import BookingAdmin from "@/app/components/admin/BookingAdmin/BookingAdmin";
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -22,7 +23,7 @@ const AdminPage = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { isLoggedIn, isCheckingAuth, isModalOpen } = useAuth();
   const router = useRouter();
-  const screens = useBreakpoint(); 
+  const screens = useBreakpoint();
 
   // Collapse menu nếu màn hình nhỏ hơn md
   useEffect(() => {
@@ -70,7 +71,7 @@ const AdminPage = () => {
       case "room":
         return <RoomAdmin />;
       case "booking":
-        return <RoomAdmin />;
+        return <BookingAdmin />;
       case "dashboard":
         return <DashBoard />;
       default:
