@@ -59,7 +59,7 @@ const RoomReviews = ({ roomId, user }) => {
         <h2 className="text-xl md:text-2xl font-semibold text-primary mb-6">
           Đánh giá từ khách hàng ({reviews.length})
         </h2>
-
+        <RoomReviewForm roomId={roomId} user={user} onSuccess={fetchReviews} />
         {loading ? (
           <Spin className="block my-6 mx-auto" />
         ) : reviews.length === 0 ? (
@@ -114,7 +114,7 @@ const RoomReviews = ({ roomId, user }) => {
           </div>
         )}
 
-        <RoomReviewForm roomId={roomId} user={user} onSuccess={fetchReviews} />
+        
       </div>
     </div>
   );

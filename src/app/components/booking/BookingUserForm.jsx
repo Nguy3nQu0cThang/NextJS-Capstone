@@ -21,7 +21,7 @@ const BookingUserForm = ({ user }) => {
     }
   }, [user, form]);
   return (
-    <div className="border rounded-xl p-4 shadow-sm">
+    <div className="border border-gray-200 rounded-xl p-4 shadow-sm">
       <h3 className="text-lg font-semibold mb-4">Thông tin người đặt</h3>
 
       <Form
