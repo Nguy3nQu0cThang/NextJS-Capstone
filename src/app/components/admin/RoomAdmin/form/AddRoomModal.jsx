@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -45,7 +44,10 @@ const AddRoomModal = ({ visible, onCancel, onSuccess }) => {
           }
         })
         .catch((err) => {
-          console.error("Lỗi fetchLocations:", err.response?.data || err.message);
+          console.error(
+            "Lỗi fetchLocations:",
+            err.response?.data || err.message
+          );
           message.error("Không thể lấy danh sách vị trí. Vui lòng thử lại.");
           setLocations([]);
         })

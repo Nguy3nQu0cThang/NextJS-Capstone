@@ -7,13 +7,15 @@ import {
   UserOutlined,
   CalendarOutlined,
   HomeOutlined,
+  PushpinOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import AdminUsersTable from "app/components/admin/AdminUsersTable";
-import RoomAdmin from "app/components/admin/RoomAdmin";
+import RoomAdmin from "@/app/components/admin/RoomAdmin/RoomAdmin";
 import DashBoard from "app/components/admin/DashBoard";
 import { useAuth } from "app/context/AuthContext";
-import LocationAdmin from "@/app/components/admin/LocationAdmin";
+import LocationAdmin from "@/app/components/admin/LocationAdmin/LocationAdmin";
+import BookingAdmin from "@/app/components/admin/BookingAdmin/BookingAdmin";
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -25,7 +27,6 @@ const AdminPage = () => {
   const router = useRouter();
   const screens = useBreakpoint();
 
-  // Collapse menu nếu màn hình nhỏ hơn md
   useEffect(() => {
     setCollapsed(!screens.md);
   }, [screens]);
@@ -59,7 +60,7 @@ const AdminPage = () => {
     },
     {
       key: "location",
-      icon: <CalendarOutlined />,
+      icon: <PushpinOutlined />,
       label: collapsed ? null : "Quản lý vị trí",
     },
     {
@@ -76,7 +77,7 @@ const AdminPage = () => {
       case "room":
         return <RoomAdmin />;
       case "booking":
-        return <RoomAdmin />;
+        return <BookingAdmin />;
       case "dashboard":
         return <DashBoard />;
       case "location":

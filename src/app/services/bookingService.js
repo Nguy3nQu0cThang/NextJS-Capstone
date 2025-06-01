@@ -41,8 +41,16 @@ export const bookRoom = async (data) => {
 };
 
 export const getAllBookings = async () => {
-  const response = await http.get("/api/dat-phong");
-  return response.data.content;
+  try {
+    const response = await http.get("/api/dat-phong"); 
+    return response.data; 
+  } catch (err) {
+    console.error(
+      `Lỗi khi tải tất cả đặt phòng:`,
+      err.response?.data || err.message
+    );
+    throw err;
+  }
 };
 
 export const getBookingsByUser = (userId) => {
@@ -69,4 +77,21 @@ export const uploadRoomImage = async (roomId, formData) => {
     console.error("Lỗi uploadRoomImage:", err.response?.data || err.message);
     throw err;
   }
+};
+
+export const getBookingById = async (bookingId) => {
+  try {
+    const res = await http.get(`/api/dat-phong/${bookingId}`);
+    return res.data.content; // Giả định API trả về content chứa dữ liệu booking
+  } catch (err) {
+    console.error(
+      `Lỗi lấy thông tin đặt phòng theo ID ${bookingId}:`,
+      err.response?.data || err.message
+    );
+    throw err;
+  }
+};
+
+export const updateBooking = async (bookingId, bookingData) => {
+  return await http.put(`/api/dat-phong/${bookingId}`, bookingData);
 };

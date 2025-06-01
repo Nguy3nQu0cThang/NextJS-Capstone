@@ -46,3 +46,15 @@ export const getAllRoomsPaging = async (pageIndex, pageSize, keyword = "") => {
   return response.data;
 };
 
+export const deleteBookingById = async (bookingId) => {
+  try {
+    const res = await http.delete(`/api/dat-phong/${bookingId}`);
+    return res.data; // API này thường trả về thông báo thành công hoặc trạng thái
+  } catch (err) {
+    console.error(
+      `Lỗi xóa đặt phòng với ID ${bookingId}:`,
+      err.response?.data || err.message
+    );
+    throw err;
+  }
+};
