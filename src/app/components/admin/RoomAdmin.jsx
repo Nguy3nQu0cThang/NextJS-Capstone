@@ -4,9 +4,25 @@ import { useState, useEffect } from "react";
 import { Table, Image, Input, Button, message, Modal } from "antd";
 import { useAuth } from "app/context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faBed, faBath } from "@fortawesome/free-solid-svg-icons";
+import {
+  faUser,
+  faBed,
+  faBath,
+  faWifi,
+  faTv,
+  faKitchenSet,
+  faCar,
+  faUtensils,
+  faFan,
+  faFire,
+  faWaterLadder,
+  faSnowflake,
+} from "@fortawesome/free-solid-svg-icons";
 
-import { deleteRoomById, getAllRoomsDashboard } from "@/app/services/roomService";
+import {
+  deleteRoomById,
+  getAllRoomsDashboard,
+} from "@/app/services/roomService";
 import { getAllLocations } from "@/app/services/bookingService";
 
 import AddRoomModal from "./form/AddRoomModal";
@@ -23,18 +39,18 @@ const RoomAdmin = () => {
   const [editingRoom, setEditingRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isSmallScreen, setIsSmallScreen] = useState(false); 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   // Effect để kiểm tra kích thước màn hình
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 768); 
+      setIsSmallScreen(window.innerWidth < 768);
     };
 
-    checkScreenSize(); 
-    window.addEventListener("resize", checkScreenSize); 
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
 
-    return () => window.removeEventListener("resize", checkScreenSize); 
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   // Fetch tất cả các vị trí một lần duy nhất
@@ -48,7 +64,9 @@ const RoomAdmin = () => {
           console.error("Location data is not in expected format:", res);
         }
       } catch (err) {
-        message.error("Failed to load locations. Please check connection or permissions.");
+        message.error(
+          "Failed to load locations. Please check connection or permissions."
+        );
         console.error("Error fetching locations:", err);
       }
     };
@@ -83,8 +101,10 @@ const RoomAdmin = () => {
   // Ánh xạ thông tin vị trí vào từng phòng
   useEffect(() => {
     if (rooms.length > 0 && allLocations.length > 0) {
-      const roomsWithLocationDetails = rooms.map(room => {
-        const foundLocation = allLocations.find(loc => loc.id === room.maViTri);
+      const roomsWithLocationDetails = rooms.map((room) => {
+        const foundLocation = allLocations.find(
+          (loc) => loc.id === room.maViTri
+        );
         return {
           ...room,
           viTriDetail: foundLocation || null,
@@ -94,11 +114,11 @@ const RoomAdmin = () => {
     }
   }, [rooms.length, allLocations.length]);
 
-  const filteredRooms = rooms.filter(room =>
+  const filteredRooms = rooms.filter((room) =>
     room.tenPhong.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const truncateDescription = text => {
+  const truncateDescription = (text) => {
     if (text && text.length > 50) return text.substring(0, 50) + "...";
     return text || "";
   };
@@ -109,7 +129,7 @@ const RoomAdmin = () => {
       title: "Hình ảnh",
       dataIndex: "hinhAnh",
       key: "image",
-      render: text => (
+      render: (text) => (
         <Image
           src={text}
           alt="phòng"
@@ -124,7 +144,7 @@ const RoomAdmin = () => {
       title: "Vị trí",
       dataIndex: "viTriDetail",
       key: "viTri",
-      render: viTriDetail => {
+      render: (viTriDetail) => {
         if (viTriDetail) {
           const parts = [];
           if (viTriDetail.tenViTri) parts.push(viTriDetail.tenViTri);
@@ -143,20 +163,36 @@ const RoomAdmin = () => {
       render: (_, record) => (
         <div className="flex flex-col gap-1 text-xs sm:text-sm">
           <div>
-            <FontAwesomeIcon icon={faUser} className="text-blue-500 mr-1" />
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faUser}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
             <span className="font-medium">{record.khach}</span> khách
           </div>
           <div>
-            <FontAwesomeIcon icon={faBed} className="text-blue-500 mr-1" />
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faBed}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
             <span className="font-medium">{record.phongNgu}</span>{" "}
             {isSmallScreen ? "PN" : "Phòng ngủ"}
           </div>
           <div>
-            <FontAwesomeIcon icon={faBed} className="text-blue-500 mr-1" />
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faBed}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
             <span className="font-medium">{record.giuong}</span> giường
           </div>
           <div>
-            <FontAwesomeIcon icon={faBath} className="text-blue-500 mr-1" />
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faBath}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
             <span className="font-medium">{record.phongTam}</span>{" "}
             {isSmallScreen ? "PT" : "Phòng tắm"}
           </div>
@@ -169,7 +205,7 @@ const RoomAdmin = () => {
       title: "Giá",
       dataIndex: "giaTien",
       key: "giaTien",
-      render: text => `${text} $ / đêm`,
+      render: (text) => `${text} $ / đêm`,
       width: 120,
       responsive: ["sm"],
     },
@@ -177,7 +213,7 @@ const RoomAdmin = () => {
       title: "Mô tả",
       dataIndex: "moTa",
       key: "moTa",
-      render: text => truncateDescription(text),
+      render: (text) => truncateDescription(text),
       width: 200,
       responsive: ["lg"],
     },
@@ -185,18 +221,18 @@ const RoomAdmin = () => {
       title: "Hành động",
       key: "actions",
       render: (_, record) => (
-        <div className="flex gap-2"> 
+        <div className="flex gap-2">
           <Button
             type="primary"
-            onClick={e => handleEdit(e, record)}
+            onClick={(e) => handleEdit(e, record)}
             className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1"
-            style={{marginRight: "5px"}}
+            style={{ marginRight: "5px" }}
           >
             Sửa
           </Button>
           <Button
             danger
-            onClick={e => handleDelete(e, record)}
+            onClick={(e) => handleDelete(e, record)}
             className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1"
           >
             Xóa
@@ -207,7 +243,7 @@ const RoomAdmin = () => {
     },
   ];
 
-  const showDetailModal = record => {
+  const showDetailModal = (record) => {
     setSelectedRoom(record);
     setIsDetailModalVisible(true);
   };
@@ -237,7 +273,10 @@ const RoomAdmin = () => {
           fetchRoomsData();
         } catch (error) {
           message.error("Xóa phòng thất bại. Vui lòng thử lại.");
-          console.error("Lỗi xóa phòng:", error.response?.data || error.message);
+          console.error(
+            "Lỗi xóa phòng:",
+            error.response?.data || error.message
+          );
         }
       },
       onCancel() {
@@ -264,13 +303,28 @@ const RoomAdmin = () => {
     setEditingRoom(null);
   };
 
+  // Định nghĩa danh sách tiện nghi và icon tương ứng
+  const amenitiesList = [
+    { key: "bep", label: "Bếp", icon: faKitchenSet },
+    { key: "mayGiat", label: "Máy giặt", icon: faFan },
+    { key: "banLa", label: "Bàn là", icon: faFire },
+    { key: "tivi", label: "Tivi", icon: faTv },
+    { key: "dieuHoa", label: "Điều hòa", icon: faSnowflake },
+    { key: "wifi", label: "Wifi", icon: faWifi },
+    { key: "doXe", label: "Đỗ xe", icon: faCar },
+    { key: "hoBoi", label: "Hồ bơi", icon: faWaterLadder },
+    { key: "banUi", label: "Bàn ủi", icon: faFire },
+    { key: "bepNuong", label: "Bếp nướng", icon: faUtensils },
+    { key: "bonTam", label: "Bồn tắm", icon: faBath },
+  ];
+
   return (
     <div className="p-2 sm:p-4 bg-gray-100 min-h-screen">
-      <div className=" admin-users-table-container">
+      <div className="admin-users-table-container">
         <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
           Quản lý phòng
         </h2>
-        <div className=" admin-users-search-bar">
+        <div className="admin-users-search-bar">
           <div className="admin-user-input">
             <Input
               placeholder="Tìm kiếm..."
@@ -324,7 +378,7 @@ const RoomAdmin = () => {
               <p className="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base">
                 {selectedRoom.moTa}
               </p>
-              <div className="grid grid-cols-2 gap-2 text-sm sm:text-base">
+              <div className="grid grid-cols-2 gap-2 text-sm sm:text-base mb-4">
                 <div>
                   <span className="font-semibold">Khách:</span>{" "}
                   {selectedRoom.khach}
@@ -345,6 +399,28 @@ const RoomAdmin = () => {
                   <span className="font-semibold">Giá:</span> $
                   {selectedRoom.giaTien} / đêm
                 </div>
+              </div>
+
+              {/* Phần hiển thị Amenities */}
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
+                Tiện nghi
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm sm:text-base">
+                {amenitiesList.map((amenity) => {
+                  if (selectedRoom[amenity.key]) {
+                    return (
+                      <div key={amenity.key} className="flex items-center">
+                        {/* Icon trong popup chi tiết: Sử dụng style cho màu và margin */}
+                        <FontAwesomeIcon
+                          icon={amenity.icon}
+                          style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+                        />
+                        <span>{amenity.label}</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
               </div>
             </div>
           </div>
