@@ -39,7 +39,7 @@ const RoomDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="flex flex-col justify-center items-center h-96">
         <Spin size="large" />
         <div className="text-gray-500 mt-4">Đang tải dữ liệu phòng...</div>
       </div>
@@ -56,7 +56,7 @@ const RoomDetailPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="relative w-full h-auto overflow-hidden mb-6">
+      <div className="relative w-full h-auto overflow-hidden rounded-xl mb-6">
         <RoomGallery images={[roomData.hinhAnh]} />
       </div>
 

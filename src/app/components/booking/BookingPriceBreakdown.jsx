@@ -12,7 +12,7 @@ const BookingPriceBreakdown = ({ room, checkin, checkout, guests }) => {
   const total = roomTotal + serviceFee;
 
   return (
-    <div className="border rounded-xl p-4 shadow-sm space-y-4 text-sm">
+    <div className="border border-gray-200 rounded-xl p-4 shadow-sm space-y-4 text-sm">
       <h3 className="text-lg font-semibold">Chi tiết giá</h3>
 
       <div className="flex justify-between">

@@ -9,14 +9,10 @@
     --foreground: #ededed;
   }
 } */
- 
-@import "tailwindcss";
-
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 
 html,
 body {
@@ -55,7 +51,7 @@ a {
 
 .airbnb-calendar .ant-picker-panel-container {
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .ant-form-item {
@@ -329,6 +325,37 @@ a {
   text-align: right;
 }
 
+/* responsive cho footer */
+.app-footer {
+  background: #f9f9f9;
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.footer-columns .ant-typography-link {
+  color: #555;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.footer-divider {
+  margin: 32px 0;
+}
+
+.footer-bottom {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.footer-left,
+.footer-right {
+  margin-bottom: 12px;
+}
+
+.footer-right .ant-space {
+  justify-content: center;
+}
+
 /* Responsive Design */
 
 /* Tablet: 768px - 1024px */
@@ -364,6 +391,21 @@ a {
   .admin-users-add-button {
     width: 100%;
     margin-left: 0;
+  }
+  .footer-bottom {
+    text-align: left;
+  }
+
+  .footer-left {
+    text-align: left;
+  }
+
+  .footer-right {
+    text-align: right;
+  }
+
+  .footer-right .ant-space {
+    justify-content: flex-end;
   }
 }
 
@@ -411,4 +453,3 @@ a {
     text-align: center;
   }
 }
-

@@ -270,19 +270,19 @@ const RoomAdmin = () => {
   // --- Render giao diện ---
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 items-stretch sm:items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Quản lý phòng</h2>
         <div className="flex gap-2">
           <Input
             placeholder="Tìm kiếm theo tên phòng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64 rounded-md border-gray-300"
+            className="sm:w-64 w-full rounded-md border-gray-300"
             prefix={<span className="text-gray-400">🔍</span>}
           />
           <Button
             type="primary"
-            className="bg-green-500 hover:bg-green-600 text-white rounded-md"
+            className="bg-red-500 hover:bg-red-600 text-white rounded-md w-full sm:w-auto"
             onClick={handleAdd}
           >
             Thêm phòng
@@ -290,7 +290,10 @@ const RoomAdmin = () => {
         </div>
       </div>
 
-      <Table
+      {/* Modal hiển thị chi tiết phòng */}
+
+      <div className="overflow-x-auto">
+        <Table
         rowKey="id"
         dataSource={filteredRooms}
         columns={columns}
@@ -302,14 +305,15 @@ const RoomAdmin = () => {
         loading={loading} // Hiển thị trạng thái loading
         className="bg-white shadow-md rounded-md"
       />
+      </div>
 
-      {/* Modal hiển thị chi tiết phòng */}
       <Modal
         title={selectedRoom?.tenPhong}
         open={isDetailModalVisible}
         onCancel={handleCancel}
-        footer={null} // Không có footer buttons
-        width={600}
+
+        footer={null}
+        width={screen.width < 640 ? "90%" : 600}
         className="rounded-lg"
       >
         {selectedRoom && (

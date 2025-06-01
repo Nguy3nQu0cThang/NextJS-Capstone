@@ -43,33 +43,42 @@ const BookingPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div className="md:col-span-2 space-y-6">
-        <BookingRoomInfo room={roomData} />
-        <BookingDateGuest
-          roomId={roomData.id}
-          checkin={checkin}
-          checkout={checkout}
-          guests={numberOfGuests}
-        />
-        <BookingUserForm user={userProfile}/>
-        <BookingBusinessToggle />
-      </div>
+    <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-10 py-8">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-8">
+        {/* Main content */}
+        <div className="space-y-6">
+          <BookingRoomInfo room={roomData} />
+          <BookingDateGuest
+            roomId={roomData.id}
+            checkin={checkin}
+            checkout={checkout}
+            guests={numberOfGuests}
+          />
+          <BookingUserForm user={userProfile} />
+          <BookingBusinessToggle />
+        </div>
 
-      <div className="md:col-span-1 space-y-6">
-        <BookingPriceBreakdown
-          room={roomData}
-          checkin={checkin}
-          checkout={checkout}
-          guests={numberOfGuests}
-        />
-        <BookingConfirmButton
-          roomId={roomId}
-          checkin={checkin}
-          checkout={checkout}
-          guestCount={numberOfGuests}
-          userId={userProfile?.id}
-        />
+        {/* Sidebar */}
+        <div className="space-y-6">
+          <div className="p-4 border border-gray-200 rounded-xl shadow-sm bg-white">
+            <BookingPriceBreakdown
+              room={roomData}
+              checkin={checkin}
+              checkout={checkout}
+              guests={numberOfGuests}
+            />
+          </div>
+
+          <div className="p-4 border border-gray-200 rounded-xl shadow-sm bg-white">
+            <BookingConfirmButton
+              roomId={roomId}
+              checkin={checkin}
+              checkout={checkout}
+              guestCount={numberOfGuests}
+              userId={userProfile?.id}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
