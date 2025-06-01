@@ -17,36 +17,60 @@ const DashBoard = () => {
 
   const fetchDashboardData = async () => {
     dispatch({ type: "SET_LOADING" });
-    const [users, rooms, bookings] = await Promise.all([
-      getAllUsers(),
-      getAllRoomsDashboard(),
-      getAllBookings(),
-    ]);
-    dispatch({ type: "SET_DATA", payload: { users, rooms, bookings } });
+    try {
+      const [usersResponse, roomsResponse, bookingsResponse] =
+        await Promise.all([
+          getAllUsers(),
+          getAllRoomsDashboard(),
+          getAllBookings(),
+        ]);
+
+      const users =
+        usersResponse?.content || usersResponse?.data || usersResponse || [];
+      const rooms =
+        roomsResponse?.content || roomsResponse?.data || roomsResponse || [];
+      const bookings =
+        bookingsResponse?.content ||
+        bookingsResponse?.data ||
+        bookingsResponse ||
+        []; 
+
+      dispatch({ type: "SET_DATA", payload: { users, rooms, bookings } });
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu dashboard:", error);
+    }
   };
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  const totalUsers = state.users.length;
-  const totalRooms = state.rooms.length;
-  const totalBookings = state.bookings.length;
-  const bookedRoomIds = new Set(state.bookings.map((b) => b.maPhong));
-  const existingRoomIds = new Set(state.rooms.map((room) => room.id));
+  const currentBookings = state.bookings || [];
+  const currentRooms = state.rooms || [];
+  const currentUsers = state.users || [];
+
+  const totalUsers = currentUsers.length;
+  const totalRooms = currentRooms.length;
+  const totalBookings = currentBookings.length;
+
+  const bookedRoomIds = new Set(currentBookings.map((b) => b.maPhong));
+  const existingRoomIds = new Set(currentRooms.map((room) => room.id));
   const validBookedRoomIds = new Set(
-    state.bookings.map((b) => b.maPhong).filter((id) => existingRoomIds.has(id))
+    currentBookings
+      .map((b) => b.maPhong)
+      .filter((id) => existingRoomIds.has(id))
   );
   const availableRooms = Math.max(0, totalRooms - validBookedRoomIds.size);
+
   const bookingsByMonth = {};
   const countPerDay = {};
-  state.bookings.forEach((b) => {
+  currentBookings.forEach((b) => {
     const date = b.ngayDen?.split("T")[0];
     if (date) {
       countPerDay[date] = (countPerDay[date] || 0) + 1;
     }
   });
-  state.bookings.forEach((b) => {
+  currentBookings.forEach((b) => {
     const dateStr = b.ngayDen?.split("T")[0];
     if (!dateStr) return;
 
@@ -70,7 +94,7 @@ const DashBoard = () => {
   const lowMonth = sorted[sorted.length - 1];
   console.table(countPerDay);
   const chartDataByDate = Object.values(
-    state.bookings.reduce((acc, cur) => {
+    currentBookings.reduce((acc, cur) => {
       if (!cur.ngayDen) return acc;
       const date = cur.ngayDen.split("T")[0];
       if (!date) return acc;
@@ -96,7 +120,7 @@ const DashBoard = () => {
   ];
   console.log(pieData);
   const topRooms = Object.values(
-    state.bookings.reduce((acc, cur) => {
+    currentBookings.reduce((acc, cur) => {
       const roomId = cur.maPhong;
       acc[roomId] = acc[roomId] || { maPhong: roomId, count: 0 };
       acc[roomId].count += 1;
@@ -108,7 +132,7 @@ const DashBoard = () => {
     .map((item) => ({
       ...item,
       tenPhong:
-        state.rooms.find((room) => room.id === item.maPhong)?.tenPhong ||
+        currentRooms.find((room) => room.id === item.maPhong)?.tenPhong || // SỬA Ở ĐÂY
         "Không rõ",
     }));
 

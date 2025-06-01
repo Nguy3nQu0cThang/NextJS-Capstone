@@ -25,8 +25,8 @@ import {
 } from "@/app/services/roomService";
 import { getAllLocations } from "@/app/services/bookingService";
 
-import AddRoomModal from "./form/AddRoomModal";
 import EditRoomModal from "./form/EditRoomModal";
+import AddRoomModal from "./form/AddRoomModal";
 
 const RoomAdmin = () => {
   const { isLoggedIn, userProfile } = useAuth();
@@ -41,7 +41,6 @@ const RoomAdmin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  // Effect để kiểm tra kích thước màn hình
   useEffect(() => {
     const checkScreenSize = () => {
       setIsSmallScreen(window.innerWidth < 768);
@@ -53,7 +52,6 @@ const RoomAdmin = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Fetch tất cả các vị trí một lần duy nhất
   useEffect(() => {
     const fetchAllLocationsData = async () => {
       try {
@@ -73,7 +71,6 @@ const RoomAdmin = () => {
     fetchAllLocationsData();
   }, []);
 
-  // Hàm để fetch danh sách phòng, có thể dùng lại khi cần refresh
   const fetchRoomsData = async () => {
     if (!isLoggedIn || userProfile?.role !== "ADMIN") {
       message.error("You need to be logged in as an admin to manage rooms.");
@@ -93,12 +90,10 @@ const RoomAdmin = () => {
     }
   };
 
-  // Effect để fetch danh sách phòng lần đầu
   useEffect(() => {
     fetchRoomsData();
   }, [isLoggedIn, userProfile]);
 
-  // Ánh xạ thông tin vị trí vào từng phòng
   useEffect(() => {
     if (rooms.length > 0 && allLocations.length > 0) {
       const roomsWithLocationDetails = rooms.map((room) => {
@@ -163,7 +158,6 @@ const RoomAdmin = () => {
       render: (_, record) => (
         <div className="flex flex-col gap-1 text-xs sm:text-sm">
           <div>
-            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
             <FontAwesomeIcon
               icon={faUser}
               style={{ color: "#3b82f6", marginRight: "0.5rem" }}
@@ -171,7 +165,6 @@ const RoomAdmin = () => {
             <span className="font-medium">{record.khach}</span> khách
           </div>
           <div>
-            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
             <FontAwesomeIcon
               icon={faBed}
               style={{ color: "#3b82f6", marginRight: "0.5rem" }}
@@ -180,7 +173,6 @@ const RoomAdmin = () => {
             {isSmallScreen ? "PN" : "Phòng ngủ"}
           </div>
           <div>
-            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
             <FontAwesomeIcon
               icon={faBed}
               style={{ color: "#3b82f6", marginRight: "0.5rem" }}
@@ -188,7 +180,6 @@ const RoomAdmin = () => {
             <span className="font-medium">{record.giuong}</span> giường
           </div>
           <div>
-            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
             <FontAwesomeIcon
               icon={faBath}
               style={{ color: "#3b82f6", marginRight: "0.5rem" }}
@@ -303,7 +294,6 @@ const RoomAdmin = () => {
     setEditingRoom(null);
   };
 
-  // Định nghĩa danh sách tiện nghi và icon tương ứng
   const amenitiesList = [
     { key: "bep", label: "Bếp", icon: faKitchenSet },
     { key: "mayGiat", label: "Máy giặt", icon: faFan },
@@ -401,7 +391,6 @@ const RoomAdmin = () => {
                 </div>
               </div>
 
-              {/* Phần hiển thị Amenities */}
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
                 Tiện nghi
               </h3>
@@ -410,7 +399,6 @@ const RoomAdmin = () => {
                   if (selectedRoom[amenity.key]) {
                     return (
                       <div key={amenity.key} className="flex items-center">
-                        {/* Icon trong popup chi tiết: Sử dụng style cho màu và margin */}
                         <FontAwesomeIcon
                           icon={amenity.icon}
                           style={{ color: "#3b82f6", marginRight: "0.5rem" }}

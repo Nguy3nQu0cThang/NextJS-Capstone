@@ -1,12 +1,9 @@
 import { http } from "app/utils/setting"; 
 
-const TOKEN_CYBERSOFT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5Mb3AiOiJCb290Y2FtcCBTw6FuZyAxNSIsIkhldEhhblN0cmluZyI6IjExLzA5LzIwMjUiLCJIZXRIYW5UaW1lIjoiMTc1NzU0ODgwMDAwMCIsIm5iZiI6MTczMzg1MDAwMCwiZXhwIjoxNzU3Njk2NDAwfQ.5vww18nCtO2mffvALHhzwa38Gyr82SqzU0hb0DLMGx0";
-
 export const deleteAccount = async (userId) => {
   try {
     const res = await http.delete(
-      `https://airbnbnew.cybersoft.edu.vn/api/users?id=${userId}`
+      `/api/users?id=${userId}`
     );
     const { statusCode, content } = res.data;
     if (statusCode === 200) {
@@ -21,7 +18,29 @@ export const deleteAccount = async (userId) => {
 };
 
 export const getAllUsers = async () => {
-  const res = await http.get("https://airbnbnew.cybersoft.edu.vn/api/users");
+  const res = await http.get(`/api/users`);
   return res.data.content;
+};
+export const getAllUsersPaging = async (
+  pageIndex = 1,
+  pageSize = 10,
+  keyword = ""
+) => {
+  try {
+    const response = await http.get(
+      `/api/users/phan-trang-tim-kiem?pageIndex=${pageIndex}&pageSize=${pageSize}&keyword=${keyword}`
+    );
+    return response.data; // Giả định response.data chứa { content: [...users], totalRow: totalCount }
+  } catch (err) {
+    console.error(
+      `Lỗi khi tải người dùng theo trang (trang ${pageIndex}, kích thước ${pageSize}, từ khóa: ${keyword}):`,
+      err.response?.data || err.message
+    );
+    throw err;
+  }
+};
+
+export const getUserDetail = (id) => {
+  return http.get(`/api/users/${id}`);
 };
 

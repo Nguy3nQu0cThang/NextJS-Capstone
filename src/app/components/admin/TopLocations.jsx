@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { Table, Card, Spin, message } from "antd";
-import { getAllBookings,getAllLocationsDashboard } from "app/services/bookingService";
-import { getAllRoomsDashboard } from "app/services/roomService";
+import {
+  getAllBookings,
+  getAllLocationsDashboard,
+} from "@/app/services/bookingService";
+import { getAllRoomsDashboard } from "@/app/services/roomService";
 
 const TopLocations = () => {
   const [loading, setLoading] = useState(true);
@@ -13,19 +16,31 @@ const TopLocations = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [rooms, bookings, locations] = await Promise.all([
-          getAllRoomsDashboard(),
-          getAllBookings(),
-          getAllLocationsDashboard(),
-        ]);
+        const [roomsResponse, bookingsResponse, locationsResponse] =
+          await Promise.all([
+            getAllRoomsDashboard(),
+            getAllBookings(),
+            getAllLocationsDashboard(),
+          ]);
 
-        
+        const rooms =
+          roomsResponse?.content || roomsResponse?.data || roomsResponse || [];
+        const bookings =
+          bookingsResponse?.content ||
+          bookingsResponse?.data ||
+          bookingsResponse ||
+          [];
+        const locations =
+          locationsResponse?.content ||
+          locationsResponse?.data ||
+          locationsResponse ||
+          [];
+
         const roomToLocationMap = new Map();
         rooms.forEach((room) => {
           roomToLocationMap.set(room.id, room.maViTri);
         });
 
-       
         const locationCount = {};
         bookings.forEach((booking) => {
           const locationId = roomToLocationMap.get(booking.maPhong);
@@ -33,7 +48,6 @@ const TopLocations = () => {
           locationCount[locationId] = (locationCount[locationId] || 0) + 1;
         });
 
-        
         const enriched = Object.entries(locationCount)
           .map(([locationId, count]) => {
             const location = locations.find((l) => l.id === Number(locationId));
@@ -45,7 +59,7 @@ const TopLocations = () => {
             };
           })
           .sort((a, b) => b.count - a.count)
-          .slice(0, 5); 
+          .slice(0, 5);
 
         setTopLocations(enriched);
       } catch (error) {

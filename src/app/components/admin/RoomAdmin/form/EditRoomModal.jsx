@@ -315,7 +315,6 @@ const EditRoomModal = ({ visible, onCancel, onSuccess, room }) => {
         layout="vertical"
         onFinish={handleFinish}
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        // onValuesChange bị bỏ qua vì không cần thiết nữa
       >
         <Form.Item
           label="Tên Phòng"

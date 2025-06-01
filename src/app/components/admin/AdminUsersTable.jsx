@@ -29,8 +29,8 @@ const AdminUsersTable = () => {
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Modal cho UpdateProfile
-  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false); // Modal cho Register
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false); 
   const [selectedUser, setSelectedUser] = useState(null);
 
   const fetchUsers = async (pageIndex, pageSize, keyword) => {
@@ -119,7 +119,7 @@ const AdminUsersTable = () => {
   const handleRegisterSuccess = () => {
     setIsRegisterModalVisible(false);
     message.success("Tạo tài khoản thành công!");
-    fetchUsers(page, pageSize, keyword); // Reload danh sách người dùng
+    fetchUsers(page, pageSize, keyword); 
   };
 
   const showModal = (user) => {

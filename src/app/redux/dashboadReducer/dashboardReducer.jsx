@@ -2,7 +2,7 @@ export const initialDashboardState = {
   users: [],
   rooms: [],
   bookings: [],
-  loading: false,
+  loading: true,
 };
 
 export const dashboardReducer = (state, action) => {
@@ -12,9 +12,9 @@ export const dashboardReducer = (state, action) => {
     case "SET_DATA":
       return {
         ...state,
-        users: action.payload.users,
-        rooms: action.payload.rooms,
-        bookings: action.payload.bookings,
+        users: action.payload.users || [], 
+        rooms: action.payload.rooms || [], 
+        bookings: action.payload.bookings || [], 
         loading: false,
       };
     default:
