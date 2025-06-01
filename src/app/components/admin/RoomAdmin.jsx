@@ -4,107 +4,127 @@ import { useState, useEffect } from "react";
 import { Table, Image, Input, Button, message, Modal } from "antd";
 import { useAuth } from "app/context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faBed, faBath } from "@fortawesome/free-solid-svg-icons";
+import {
+  faUser,
+  faBed,
+  faBath,
+  faWifi,
+  faTv,
+  faKitchenSet,
+  faCar,
+  faUtensils,
+  faFan,
+  faFire,
+  faWaterLadder,
+  faSnowflake,
+} from "@fortawesome/free-solid-svg-icons";
+
+import {
+  deleteRoomById,
+  getAllRoomsDashboard,
+} from "@/app/services/roomService";
+import { getAllLocations } from "@/app/services/bookingService";
+
 import AddRoomModal from "./form/AddRoomModal";
 import EditRoomModal from "./form/EditRoomModal";
-import { deleteRoomById, getAllRoomsDashboard } from "@/app/services/roomService";
-import { getAllLocations } from "@/app/services/bookingService";
 
 const RoomAdmin = () => {
   const { isLoggedIn, userProfile } = useAuth();
   const [rooms, setRooms] = useState([]);
-  const [allLocations, setAllLocations] = useState([]); // State để lưu tất cả vị trí
-  const [selectedRoom, setSelectedRoom] = useState(null); // Phòng được chọn để xem chi tiết
-  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false); // State quản lý hiển thị modal chi tiết
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false); // State quản lý hiển thị modal thêm phòng
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false); // State quản lý hiển thị modal sửa phòng
-  const [editingRoom, setEditingRoom] = useState(null); // Phòng đang được chỉnh sửa
-  const [loading, setLoading] = useState(true); // State quản lý trạng thái tải dữ liệu
-  const [searchTerm, setSearchTerm] = useState(""); // State cho thanh tìm kiếm
+  const [allLocations, setAllLocations] = useState([]);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  // --- useEffect để fetch tất cả các vị trí một lần duy nhất khi component mount ---
+  // Effect để kiểm tra kích thước màn hình
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // Fetch tất cả các vị trí một lần duy nhất
   useEffect(() => {
     const fetchAllLocationsData = async () => {
       try {
         const res = await getAllLocations();
-        if (res && Array.isArray(res.content)) {
+        if (res?.content && Array.isArray(res.content)) {
           setAllLocations(res.content);
         } else {
-          // Log lỗi nếu dữ liệu không đúng định dạng, nhưng không hiện message cho người dùng
-          console.error("Dữ liệu vị trí không đúng định dạng hoặc rỗng:", res);
+          console.error("Location data is not in expected format:", res);
         }
       } catch (err) {
         message.error(
-          "Không thể tải danh sách vị trí. Vui lòng kiểm tra kết nối hoặc quyền truy cập."
+          "Failed to load locations. Please check connection or permissions."
         );
-        console.error("Lỗi lấy danh sách vị trí:", err);
+        console.error("Error fetching locations:", err);
       }
     };
     fetchAllLocationsData();
-  }, []); // [] đảm bảo hook chỉ chạy một lần
+  }, []);
 
-  // --- Hàm dùng để fetch danh sách phòng, có thể gọi lại khi cần refresh dữ liệu ---
+  // Hàm để fetch danh sách phòng, có thể dùng lại khi cần refresh
   const fetchRoomsData = async () => {
-    // Kiểm tra quyền admin trước khi fetch
     if (!isLoggedIn || userProfile?.role !== "ADMIN") {
-      message.error(
-        "Bạn cần đăng nhập với vai trò admin để xem và quản lý phòng."
-      );
-      setLoading(false); // Đảm bảo ngừng loading
+      message.error("You need to be logged in as an admin to manage rooms.");
+      setLoading(false);
       return;
     }
 
-    setLoading(true); // Bắt đầu tải
+    setLoading(true);
     try {
-      // Gọi API lấy tất cả phòng
       const fetchedRooms = await getAllRoomsDashboard();
-      setRooms(fetchedRooms || []); // Cập nhật state phòng
+      setRooms(fetchedRooms || []);
     } catch (err) {
-      message.error("Không thể lấy danh sách phòng. Vui lòng thử lại.");
-      console.error("Lỗi lấy danh sách phòng:", err);
+      message.error("Failed to fetch room list. Please try again.");
+      console.error("Error fetching rooms:", err);
     } finally {
-      setLoading(false); // Kết thúc tải
+      setLoading(false);
     }
   };
 
-  // --- useEffect để fetch danh sách phòng lần đầu khi component mount hoặc khi trạng thái auth thay đổi ---
+  // Effect để fetch danh sách phòng lần đầu
   useEffect(() => {
     fetchRoomsData();
   }, [isLoggedIn, userProfile]);
 
-  // --- useEffect để ánh xạ thông tin vị trí vào từng phòng sau khi có cả rooms và allLocations ---
+  // Ánh xạ thông tin vị trí vào từng phòng
   useEffect(() => {
-    // Chỉ chạy khi cả rooms và allLocations đều có dữ liệu
     if (rooms.length > 0 && allLocations.length > 0) {
       const roomsWithLocationDetails = rooms.map((room) => {
-        // Tìm vị trí chi tiết dựa trên maViTri của phòng
         const foundLocation = allLocations.find(
           (loc) => loc.id === room.maViTri
         );
         return {
           ...room,
-          viTriDetail: foundLocation || null, // Gán object vị trí hoặc null nếu không tìm thấy
+          viTriDetail: foundLocation || null,
         };
       });
-      setRooms(roomsWithLocationDetails); // Cập nhật state rooms với thông tin vị trí chi tiết
+      setRooms(roomsWithLocationDetails);
     }
-    // Dependency array: hook chạy lại khi số lượng rooms hoặc allLocations thay đổi
   }, [rooms.length, allLocations.length]);
 
-  // --- Hàm lọc phòng theo từ khóa tìm kiếm ---
   const filteredRooms = rooms.filter((room) =>
     room.tenPhong.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- Hàm rút gọn mô tả cho cột hiển thị ---
   const truncateDescription = (text) => {
     if (text && text.length > 50) return text.substring(0, 50) + "...";
     return text || "";
   };
 
-  // --- Cấu hình các cột cho bảng Ant Design ---
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 50 },
+    { title: "ID", dataIndex: "id", key: "id", responsive: ["md"], width: 50 },
     {
       title: "Hình ảnh",
       dataIndex: "hinhAnh",
@@ -113,8 +133,8 @@ const RoomAdmin = () => {
         <Image
           src={text}
           alt="phòng"
-          width={100}
-          fallback="https://via.placeholder.com/100?text=Image+Not+Found" // Hình ảnh dự phòng
+          className="w-20 h-auto object-cover rounded-md"
+          fallback="https://via.placeholder.com/100?text=Image+Not+Found"
         />
       ),
       width: 120,
@@ -122,7 +142,7 @@ const RoomAdmin = () => {
     { title: "Tên phòng", dataIndex: "tenPhong", key: "tenPhong", width: 150 },
     {
       title: "Vị trí",
-      dataIndex: "viTriDetail", // Sử dụng thuộc tính đã được ánh xạ
+      dataIndex: "viTriDetail",
       key: "viTri",
       render: (viTriDetail) => {
         if (viTriDetail) {
@@ -130,36 +150,56 @@ const RoomAdmin = () => {
           if (viTriDetail.tenViTri) parts.push(viTriDetail.tenViTri);
           if (viTriDetail.tinhThanh) parts.push(viTriDetail.tinhThanh);
           if (viTriDetail.quocGia) parts.push(viTriDetail.quocGia);
-          return parts.join(", ") || "N/A"; // Nối các phần lại bằng dấu phẩy
+          return parts.join(", ") || "N/A";
         }
-        return "N/A"; // Hiển thị N/A nếu không có chi tiết vị trí
+        return "N/A";
       },
       width: 150,
+      responsive: ["md"],
     },
     {
       title: "Chi tiết",
       key: "details",
       render: (_, record) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 text-xs sm:text-sm">
           <div>
-            <FontAwesomeIcon icon={faUser} className="text-blue-500 mr-2" />
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faUser}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
             <span className="font-medium">{record.khach}</span> khách
           </div>
           <div>
-            <FontAwesomeIcon icon={faBed} className="text-blue-500 mr-2" />
-            <span className="font-medium">{record.phongNgu}</span> phòng ngủ
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faBed}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
+            <span className="font-medium">{record.phongNgu}</span>{" "}
+            {isSmallScreen ? "PN" : "Phòng ngủ"}
           </div>
           <div>
-            <FontAwesomeIcon icon={faBed} className="text-blue-500 mr-2" />
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faBed}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
             <span className="font-medium">{record.giuong}</span> giường
           </div>
           <div>
-            <FontAwesomeIcon icon={faBath} className="text-blue-500 mr-2" />
-            <span className="font-medium">{record.phongTam}</span> phòng tắm
+            {/* Icon trong bảng: Sử dụng style cho màu và margin */}
+            <FontAwesomeIcon
+              icon={faBath}
+              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+            />
+            <span className="font-medium">{record.phongTam}</span>{" "}
+            {isSmallScreen ? "PT" : "Phòng tắm"}
           </div>
         </div>
       ),
       width: 150,
+      responsive: ["sm"],
     },
     {
       title: "Giá",
@@ -167,6 +207,7 @@ const RoomAdmin = () => {
       key: "giaTien",
       render: (text) => `${text} $ / đêm`,
       width: 120,
+      responsive: ["sm"],
     },
     {
       title: "Mô tả",
@@ -174,6 +215,7 @@ const RoomAdmin = () => {
       key: "moTa",
       render: (text) => truncateDescription(text),
       width: 200,
+      responsive: ["lg"],
     },
     {
       title: "Hành động",
@@ -183,14 +225,15 @@ const RoomAdmin = () => {
           <Button
             type="primary"
             onClick={(e) => handleEdit(e, record)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1"
+            style={{ marginRight: "5px" }}
           >
             Sửa
           </Button>
           <Button
             danger
             onClick={(e) => handleDelete(e, record)}
-            className="bg-red-500 hover:bg-red-600 text-white"
+            className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1"
           >
             Xóa
           </Button>
@@ -200,7 +243,6 @@ const RoomAdmin = () => {
     },
   ];
 
-  // --- Các hàm xử lý sự kiện Modal ---
   const showDetailModal = (record) => {
     setSelectedRoom(record);
     setIsDetailModalVisible(true);
@@ -211,14 +253,13 @@ const RoomAdmin = () => {
   };
 
   const handleEdit = (e, record) => {
-    e.stopPropagation(); // Ngăn chặn sự kiện click lan ra hàng của bảng
+    e.stopPropagation();
     setEditingRoom(record);
     setIsEditModalVisible(true);
   };
 
-  // --- Hàm xử lý xóa phòng ---
   const handleDelete = async (e, record) => {
-    e.stopPropagation(); // Ngăn chặn sự kiện click lan ra hàng của bảng
+    e.stopPropagation();
     Modal.confirm({
       title: `Bạn có chắc chắn muốn xóa phòng "${record.tenPhong}" không?`,
       content: "Hành động này không thể hoàn tác.",
@@ -227,10 +268,8 @@ const RoomAdmin = () => {
       cancelText: "Hủy",
       onOk: async () => {
         try {
-          // Gọi API xóa phòng bằng ID
           await deleteRoomById(record.id);
           message.success(`Đã xóa phòng "${record.tenPhong}" thành công!`);
-          // Sau khi xóa thành công, gọi lại hàm fetchRoomsData để cập nhật danh sách phòng mới nhất từ server
           fetchRoomsData();
         } catch (error) {
           message.error("Xóa phòng thất bại. Vui lòng thử lại.");
@@ -246,19 +285,16 @@ const RoomAdmin = () => {
     });
   };
 
-  // --- Xử lý khi thêm phòng thành công ---
   const handleAddSuccess = () => {
-    fetchRoomsData(); // Tải lại dữ liệu sau khi thêm
-    handleCancel(); // Đóng modal
+    fetchRoomsData();
+    handleCancel();
   };
 
-  // --- Xử lý khi sửa phòng thành công ---
   const handleEditSuccess = () => {
-    fetchRoomsData(); // Tải lại dữ liệu sau khi sửa
-    handleCancel(); // Đóng modal
+    fetchRoomsData();
+    handleCancel();
   };
 
-  // --- Hàm đóng tất cả các modal ---
   const handleCancel = () => {
     setIsDetailModalVisible(false);
     setIsAddModalVisible(false);
@@ -267,66 +303,82 @@ const RoomAdmin = () => {
     setEditingRoom(null);
   };
 
-  // --- Render giao diện ---
+  // Định nghĩa danh sách tiện nghi và icon tương ứng
+  const amenitiesList = [
+    { key: "bep", label: "Bếp", icon: faKitchenSet },
+    { key: "mayGiat", label: "Máy giặt", icon: faFan },
+    { key: "banLa", label: "Bàn là", icon: faFire },
+    { key: "tivi", label: "Tivi", icon: faTv },
+    { key: "dieuHoa", label: "Điều hòa", icon: faSnowflake },
+    { key: "wifi", label: "Wifi", icon: faWifi },
+    { key: "doXe", label: "Đỗ xe", icon: faCar },
+    { key: "hoBoi", label: "Hồ bơi", icon: faWaterLadder },
+    { key: "banUi", label: "Bàn ủi", icon: faFire },
+    { key: "bepNuong", label: "Bếp nướng", icon: faUtensils },
+    { key: "bonTam", label: "Bồn tắm", icon: faBath },
+  ];
+
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
-      <div className="flex flex-col sm:flex-row justify-between gap-4 items-stretch sm:items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Quản lý phòng</h2>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Tìm kiếm theo tên phòng..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="sm:w-64 w-full rounded-md border-gray-300"
-            prefix={<span className="text-gray-400">🔍</span>}
-          />
+    <div className="p-2 sm:p-4 bg-gray-100 min-h-screen">
+      <div className="admin-users-table-container">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+          Quản lý phòng
+        </h2>
+        <div className="admin-users-search-bar">
+          <div className="admin-user-input">
+            <Input
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              prefix={<span className="text-gray-400">🔍</span>}
+            />
+          </div>
           <Button
             type="primary"
-            className="bg-red-500 hover:bg-red-600 text-white rounded-md w-full sm:w-auto"
+            className="bg-green-500 hover:bg-green-600 text-white rounded-md flex-shrink-0"
             onClick={handleAdd}
           >
-            Thêm phòng
+            + Thêm phòng
           </Button>
         </div>
       </div>
 
-      {/* Modal hiển thị chi tiết phòng */}
-
       <div className="overflow-x-auto">
         <Table
-        rowKey="id"
-        dataSource={filteredRooms}
-        columns={columns}
-        onRow={(record) => ({
-          // Khi click vào hàng, hiển thị modal chi tiết
-          onClick: () => showDetailModal(record),
-        })}
-        pagination={{ pageSize: 5 }} // Phân trang với 5 mục mỗi trang
-        loading={loading} // Hiển thị trạng thái loading
-        className="bg-white shadow-md rounded-md"
-      />
+          rowKey="id"
+          dataSource={filteredRooms}
+          columns={columns}
+          onRow={(record) => ({
+            onClick: () => showDetailModal(record),
+          })}
+          pagination={{ pageSize: 5 }}
+          loading={loading}
+          className="bg-white shadow-md rounded-md"
+          scroll={{ x: "max-content" }}
+        />
       </div>
 
       <Modal
         title={selectedRoom?.tenPhong}
         open={isDetailModalVisible}
         onCancel={handleCancel}
-
         footer={null}
-        width={screen.width < 640 ? "90%" : 600}
+        width={window.innerWidth < 768 ? "90%" : 600}
         className="rounded-lg"
       >
         {selectedRoom && (
           <div>
             <Image
               src={selectedRoom.hinhAnh}
-              alt="phòng"
-              className="w-full h-64 object-cover rounded-t-lg"
+              alt="room"
+              className="w-full h-48 sm:h-64 object-cover rounded-t-lg"
               fallback="https://via.placeholder.com/600x400?text=Image+Not+Found"
             />
-            <div className="p-4">
-              <p className="text-gray-700 mb-4">{selectedRoom.moTa}</p>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="p-3 sm:p-4">
+              <p className="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base">
+                {selectedRoom.moTa}
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-sm sm:text-base mb-4">
                 <div>
                   <span className="font-semibold">Khách:</span>{" "}
                   {selectedRoom.khach}
@@ -348,19 +400,39 @@ const RoomAdmin = () => {
                   {selectedRoom.giaTien} / đêm
                 </div>
               </div>
+
+              {/* Phần hiển thị Amenities */}
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
+                Tiện nghi
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm sm:text-base">
+                {amenitiesList.map((amenity) => {
+                  if (selectedRoom[amenity.key]) {
+                    return (
+                      <div key={amenity.key} className="flex items-center">
+                        {/* Icon trong popup chi tiết: Sử dụng style cho màu và margin */}
+                        <FontAwesomeIcon
+                          icon={amenity.icon}
+                          style={{ color: "#3b82f6", marginRight: "0.5rem" }}
+                        />
+                        <span>{amenity.label}</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal thêm phòng */}
       <AddRoomModal
         visible={isAddModalVisible}
         onCancel={handleCancel}
         onSuccess={handleAddSuccess}
       />
 
-      {/* Modal sửa phòng */}
       <EditRoomModal
         visible={isEditModalVisible}
         onCancel={handleCancel}
