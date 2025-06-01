@@ -8,10 +8,8 @@ import locale from "antd/es/date-picker/locale/vi_VN";
 import { Layout, Button, Dropdown, DatePicker, message, Modal } from "antd";
 import { SearchOutlined, MenuOutlined } from "@ant-design/icons";
 import Image from "next/image";
-import {
-  getListLocations,
-  getRoomsByLocation,
-} from "app/services/bookingService";
+import { getRoomsByLocation } from "app/services/roomService";
+import { getListLocations } from "app/services/bookingService";
 import { headerReducer, initialState } from "app/redux/reducer/store";
 import UserMenu from "./User/UserMenu";
 import { useAuth } from "app/context/AuthContext";
