@@ -508,3 +508,64 @@ a {
     text-align: center;
   }
 }
+
+.nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #222222;
+}
+
+.nav-links a,
+.nav-links span {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.2s;
+  color: #222222;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nav-links a:hover,
+.nav-links span:hover {
+  color: #ff385c;
+;
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+}
+
+/* Style thanh cuộn cho UserProfile */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d1d1 #f1f1f1;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Màu trắng nhạt cho track */
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d1d1d1; /* Màu xám nhạt cho thumb */
+  border-radius: 4px;
+  opacity: 0; /* Ẩn thumb khi không hover */
+  transition: opacity 0.2s;
+}
+
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  opacity: 1; /* Hiện thumb khi hover */
+}

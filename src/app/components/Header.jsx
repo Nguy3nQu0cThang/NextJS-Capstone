@@ -272,6 +272,19 @@ const Header = ({ onSearch }) => {
             {searchBar}
           </div>
         )}
+        {!isHomePage && (
+          <div className="nav-links">
+            <Link href="/">Trang chủ</Link>
+            {["Về chúng tôi", "Liên hệ", "Trợ giúp"].map((item) => (
+              <span
+                key={item}
+                onClick={() => message.info("Tính năng này đang được cập nhật")}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="search-toggle-mobile">
           <Button

@@ -119,7 +119,6 @@ const UserProfile = () => {
         const bookings = res.data.content;
         setUserBookings(bookings);
 
-        // Lấy chi tiết phòng
         const roomPromises = bookings.map(async (booking) => {
           try {
             const roomRes = await http.get(
@@ -145,7 +144,6 @@ const UserProfile = () => {
         }, {});
         setRoomDetails(roomDetailsMap);
 
-        // Lấy chi tiết vị trí từ maViTri
         const locationPromises = rooms
           .filter((room) => room.maViTri && !room.error)
           .map(async (room) => {
@@ -224,15 +222,15 @@ const UserProfile = () => {
 
   if (isCheckingAuth || loading) {
     return (
-      <div style={{ textAlign: "center", margin: "50px 0" }}>
+      <div className="text-center my-12">
         <Spin size="large" />
-        <p style={{ marginTop: "10px" }}>Đang tải thông tin...</p>
+        <p className="mt-2">Đang tải thông tin...</p>
       </div>
     );
   }
 
   if (error) {
-    return <Alert message={error} type="error" style={{ margin: "20px" }} />;
+    return <Alert message={error} type="error" className="m-5" />;
   }
 
   if (!userProfile) {
@@ -240,7 +238,7 @@ const UserProfile = () => {
       <Alert
         message="Không có thông tin hồ sơ để hiển thị."
         type="warning"
-        style={{ margin: "20px" }}
+        className="m-5"
       />
     );
   }
@@ -248,141 +246,124 @@ const UserProfile = () => {
   const { avatar, name, email, phone, birthday, gender } = userProfile;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <Card
-        title="Thông tin hồ sơ"
-        variant="borderless"
-        style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-      >
-        <div
-          style={{
-            marginBottom: "20px",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            alignItems: "flex-start",
-            gap: "20px",
-          }}
-        >
-          <div style={{ flex: 1, textAlign: "center", minWidth: "200px" }}>
-            <Avatar
-              size={100}
-              src={avatar || null}
-              icon={<UserOutlined />}
-              style={{ border: "2px solid #1890ff" }}
-            />
-            <div style={{ marginTop: "10px", marginBottom: "10px" }}>
-              <AvatarUpload
-                userProfile={userProfile}
-                setUserProfile={setUserProfile}
-                refreshProfile={refreshProfile}
+    <div className="flex gap-6 max-w-6xl mx-auto p-5">
+      {/* Thông tin người dùng - 40% */}
+      <div className="w-[40%]">
+        <Card title="Thông tin hồ sơ" variant={false} className="shadow-lg">
+          <div className="flex justify-between items-start mb-4">
+            {/* Avatar, Upload, Tên */}
+            <div className="flex flex-col items-center">
+              <Avatar
+                size={80}
+                src={avatar || null}
+                icon={<UserOutlined />}
+                className="border-2 border-blue-500"
               />
+              <div className="my-2">
+                <AvatarUpload
+                  userProfile={userProfile}
+                  setUserProfile={setUserProfile}
+                  refreshProfile={refreshProfile}
+                />
+              </div>
+              <h2 className="text-lg font-semibold">
+                {name || "Chưa cung cấp"}
+              </h2>
             </div>
-            <h2>{name || "Chưa cung cấp"}</h2>
+            {/* Nút Cập nhật và Xóa */}
+            <div className="flex flex-col gap-2">
+              <Button
+                className="bg-green-600 text-white font-medium h-9 rounded-full"
+                onClick={handleOpenUpdateModal}
+              >
+                Cập nhật tài khoản
+              </Button>
+              <Button
+                type="primary"
+                danger
+                className="font-medium h-9 rounded-full"
+                loading={deleting}
+                onClick={handleDeleteAccount}
+              >
+                Xóa tài khoản
+              </Button>
+            </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-              alignSelf: "flex-end",
-              marginTop: "20px",
-            }}
-          >
-            <Button
-              style={{
-                backgroundColor: "green",
-                color: "white",
-                fontWeight: "500",
-                height: "36px",
-              }}
-              shape="round"
-              onClick={handleOpenUpdateModal}
-            >
-              Cập nhật tài khoản
-            </Button>
-            <Button
-              type="primary"
-              danger
-              shape="round"
-              style={{ fontWeight: "500", height: "36px" }}
-              loading={deleting}
-              onClick={handleDeleteAccount}
-            >
-              Xóa tài khoản
-            </Button>
-          </div>
-        </div>
-
-        <Descriptions bordered column={1}>
-          <Descriptions.Item label="Họ và tên">
-            {name || "Chưa cung cấp"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Email">
-            {email || "Chưa cung cấp"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Số điện thoại">
-            {phone || "Chưa cung cấp"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Ngày sinh">
-            {birthday || "Chưa cung cấp"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Giới tính">
-            {gender ? "Nam" : "Nữ"}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      {userBookings.length > 0 && (
-        <Card
-          title="Lịch sử đặt phòng"
-          style={{ marginTop: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-        >
-          {loadingRooms ? (
-            <div style={{ textAlign: "center", margin: "16px 0" }}>
-              <Spin size="large" />
-              <p style={{ marginTop: "8px" }}>Đang tải lịch sử đặt phòng...</p>
-            </div>
-          ) : (
-            userBookings.map((booking) => {
-              const room = roomDetails[booking.maPhong] || {};
-              const location = room.maViTri
-                ? locationDetails[room.maViTri]
-                : {};
-              return (
-                <div key={booking.id} style={{ marginBottom: "12px" }}>
-                  <p>
-                    <strong>Tên phòng:</strong> {room.tenPhong || "Đang tải..."}
-                  </p>
-                  <p>
-                    <strong>Vị trí:</strong>{" "}
-                    {location.tenViTri
-                      ? `${location.tenViTri}, ${location.tinhThanh}, ${location.quocGia}`
-                      : "Không có thông tin vị trí"}
-                  </p>
-                  <p>
-                    <strong>Ngày đến:</strong>{" "}
-                    {new Date(booking.ngayDen).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <strong>Ngày đi:</strong>{" "}
-                    {new Date(booking.ngayDi).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <strong>Số lượng khách:</strong> {booking.soLuongKhach}
-                  </p>
-                  {(room.error || location.error) && (
-                    <p style={{ color: "red" }}>
-                      {room.error || location.error}
-                    </p>
-                  )}
-                  <hr />
-                </div>
-              );
-            })
-          )}
+          <Descriptions variant column={1}>
+            <Descriptions.Item label="Họ và tên">
+              {name || "Chưa cung cấp"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Email">
+              {email || "Chưa cung cấp"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Số điện thoại">
+              {phone || "Chưa cung cấp"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày sinh">
+              {birthday || "Chưa cung cấp"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Giới tính">
+              {gender ? "Nam" : "Nữ"}
+            </Descriptions.Item>
+          </Descriptions>
         </Card>
+      </div>
+
+      {/* Lịch sử đặt phòng - 60% */}
+      {userBookings.length > 0 && (
+        <div className="w-[60%] max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-white scrollbar-thumb-rounded">
+          <Card
+            title="Lịch sử đặt phòng"
+            variant={false}
+            className="shadow-lg"
+          >
+            {loadingRooms ? (
+              <div className="text-center my-4">
+                <Spin size="large" />
+                <p className="mt-2">Đang tải lịch sử đặt phòng...</p>
+              </div>
+            ) : (
+              userBookings.map((booking) => {
+                const room = roomDetails[booking.maPhong] || {};
+                const location = room.maViTri
+                  ? locationDetails[room.maViTri]
+                  : {};
+                return (
+                  <div key={booking.id} className="mb-3">
+                    <p>
+                      <strong>Tên phòng:</strong>{" "}
+                      {room.tenPhong || "Đang tải..."}
+                    </p>
+                    <p>
+                      <strong>Vị trí:</strong>{" "}
+                      {location.tenViTri
+                        ? `${location.tenViTri}, ${location.tinhThanh}, ${location.quocGia}`
+                        : "Không có thông tin vị trí"}
+                    </p>
+                    <p>
+                      <strong>Ngày đến:</strong>{" "}
+                      {new Date(booking.ngayDen).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Ngày đi:</strong>{" "}
+                      {new Date(booking.ngayDi).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Số lượng khách:</strong> {booking.soLuongKhach}
+                    </p>
+                    {(room.error || location.error) && (
+                      <p className="text-red-500">
+                        {room.error || location.error}
+                      </p>
+                    )}
+                    <hr className="my-2" />
+                  </div>
+                );
+              })
+            )}
+          </Card>
+        </div>
       )}
 
       {modalVisible && (
