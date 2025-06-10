@@ -43,10 +43,10 @@ const BookingPage = () => {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-10 py-8">
+    <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-10 py-8 ">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-8">
         {/* Main content */}
-        <div className="space-y-6">
+        <div className="space-y-6 ">
           <BookingRoomInfo room={roomData} />
           <BookingDateGuest
             roomId={roomData.id}
@@ -69,7 +69,7 @@ const BookingPage = () => {
             />
           </div>
 
-          <div className="p-4 border border-gray-200 rounded-xl shadow-sm bg-white">
+          <div className="p-4 border border-gray-200 rounded-xl shadow-sm bg-white ">
             <BookingConfirmButton
               roomId={roomId}
               checkin={checkin}

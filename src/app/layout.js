@@ -9,6 +9,7 @@ import "antd/dist/reset.css";
 import "@/app/globals.css"; 
 import "leaflet/dist/leaflet.css";
 import "@ant-design/v5-patch-for-react-19";
+import BackToTop from "./components/BackToTop";
 
 
 const geistSans = Geist({
@@ -30,6 +31,7 @@ const InnerLayout = ({ children }) => {
       <Header onSearch={setSelectedLocationId} />
       {children}
       <AppFooter/>
+      <BackToTop/>
     </>
   );
 };

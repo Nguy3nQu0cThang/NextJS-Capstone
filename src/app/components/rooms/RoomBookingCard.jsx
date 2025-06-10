@@ -49,7 +49,7 @@ const RoomBookingCard = ({ room }) => {
   return (
     <Card
       variant="outlined"
-      className="shadow-lg rounded-2xl sticky top-24"
+      className="shadow-lg rounded-2xl sticky top-24 comment-wrapper mt-10"
       styles={{ body: { padding: 0 } }}
     >
       <div className="space-y-4 p-6">

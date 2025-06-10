@@ -1,5 +1,6 @@
 "use client";
 
+import { Carousel } from "antd";
 import Image from "next/image";
 
 const RoomGallery = ({ images }) => {
@@ -19,32 +20,28 @@ const RoomGallery = ({ images }) => {
     );
   }
 
-  const mainImage = images[0];
-  const subImages = images.slice(1, 5);
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 rounded-2xl overflow-hidden">
-      {/* Ảnh chính */}
-      <div className="md:col-span-2 h-[300px] md:h-[500px]">
-        <img
-          src={mainImage}
-          alt="Ảnh chính"
-          className="w-full h-full object-cover rounded-xl"
-        />
-      </div>
-
-      {/* Các ảnh phụ */}
-      <div className="grid grid-cols-2 grid-rows-2 gap-2 h-[300px] md:h-[500px]">
-        {subImages.map((img, idx) => (
-          <img
-            key={idx}
-            src={img}
-            alt={`Ảnh phụ ${idx + 1}`}
-            className="w-full h-full object-cover rounded-xl"
-          />
+    <div className="rounded-2xl overflow-hidden">
+      <Carousel
+        autoplay
+        dots
+        className="rounded-2xl"
+        arrows
+        draggable
+        effect="scrollx"
+      >
+        {images.map((img, idx) => (
+          <div key={idx} className="h-[300px] md:h-[500px]">
+            <img
+              src={img}
+              alt={`Ảnh ${idx + 1}`}
+              className="w-full h-full object-cover rounded-2xl"
+            />
+          </div>
         ))}
-      </div>
+      </Carousel>
     </div>
   );
 };

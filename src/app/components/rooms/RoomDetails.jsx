@@ -14,7 +14,7 @@ const RoomDetails = ({ room }) => {
   if (!room) return null;
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 comment-wrapper mt-10">
       <Card
         variant="filled"
         className="shadow-md rounded-xl"

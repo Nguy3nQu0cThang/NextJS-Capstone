@@ -40,7 +40,7 @@ const BookingConfirmButton = ({
         type="primary"
         block
         size="large"
-        className="bg-[#ff385c] hover:bg-[#ff5a74] border-none rounded-xl mt-4"
+        className="bg-[#ff385c] hover:bg-[#ff5a74] border-none rounded-xl mt-4 "
         onClick={handleConfirm}
       >
         Xác nhận và thanh toán

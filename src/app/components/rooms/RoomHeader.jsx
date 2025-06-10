@@ -34,7 +34,7 @@ const RoomHeader = ({ room }) => {
   }, [room?.id]);
   if (!room) return null;
   return (
-    <div className="space-y-2">
+    <div className="comment-wrapper mt-10">
       <h1 className="text-2xl md:text-3xl font-bold">{room.tenPhong}</h1>
 
       <div className="flex items-center gap-2 text-gray-600 text-sm">
