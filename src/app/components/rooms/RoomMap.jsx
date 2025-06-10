@@ -59,7 +59,7 @@ const RoomMap = ({ room }) => {
   }
 
   return (
-    <div className="mt-10">
+    <div className="comment-wrapper mt-10">
       <h2 className="text-xl font-semibold mb-4">Vị trí</h2>
       <Card style={{ borderRadius: 12, overflow: "hidden" }}>
         <MapContainer

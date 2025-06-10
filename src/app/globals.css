@@ -411,6 +411,59 @@ a {
   }
 }
 
+.comment-content {
+  max-height: 4.5em; /* khoảng 3 dòng */
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.3s ease;
+  word-break: break-word;
+  white-space: pre-line;
+}
+
+.comment-content.expanded {
+  max-height: none;
+}
+
+.comment-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.back-to-top.show {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .back-to-top {
+    width: 40px;
+    height: 40px;
+    bottom: 16px;
+    right: 16px;
+  }
+}
+
+
 /* Mobile: < 768px */
 @media (max-width: 767px) {
   .admin-users-table-container {

@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { List, Avatar, Rate, Spin, Button } from "antd";
 import { getRoomReviews } from "app/services/roomService";
 import RoomReviewForm from "./RoomReviewForm";
-
 const RoomReviews = ({ roomId, user }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(3);
+  // const [visibleCount, setVisibleCount] = useState(3);
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -35,12 +34,12 @@ const RoomReviews = ({ roomId, user }) => {
     fetchReviews();
   }, [roomId]);
 
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 3);
-  };
+  // const handleLoadMore = () => {
+  //   setVisibleCount((prev) => prev + 3);
+  // };
 
-  const visibleReviews = reviews.slice(0, visibleCount);
-  const hasMore = visibleCount < reviews.length;
+  // const visibleReviews = reviews.slice(0, visibleCount);
+  // const hasMore = visibleCount < reviews.length;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -54,7 +53,7 @@ const RoomReviews = ({ roomId, user }) => {
   };
 
   return (
-    <div className="mt-10 px-4 md:px-2">
+    <div className="comment-wrapper mt-10">
       <div className="max-w-2xl mx-auto">
         <h2 className="text-xl md:text-2xl font-semibold text-primary mb-6">
           Đánh giá từ khách hàng ({reviews.length})
@@ -68,40 +67,64 @@ const RoomReviews = ({ roomId, user }) => {
           <List
             className="mb-6"
             itemLayout="horizontal"
-            dataSource={visibleReviews}
-            renderItem={(review) => (
-              <List.Item className="py-2 md:py-3">
-                <List.Item.Meta
-                  avatar={
-                    review.avatar ? (
-                      <Avatar src={review.avatar} />
-                    ) : (
-                      <Avatar>{review.tenNguoiBinhLuan?.charAt(0)}</Avatar>
-                    )
-                  }
-                  title={
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">
-                        {review.tenNguoiBinhLuan}
-                      </span>
-                      <Rate disabled value={review.saoBinhLuan} />
-                    </div>
-                  }
-                  description={
-                    <div>
-                      <p className="text-sm md:text-base">{review.noiDung}</p>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {formatDate(review.ngayBinhLuan)}
+            dataSource={reviews}
+            pagination={{
+              pageSize: 8,
+              showSizeChanger: false,
+              position: "bottom",
+              align: "center",
+            }}
+            renderItem={(review) => {
+              const [expanded, setExpanded] = useState(false);
+              const isLong = review.noiDung.length > 200;
+              return (
+                <List.Item className="py-2 md:py-3">
+                  <List.Item.Meta
+                    avatar={
+                      review.avatar ? (
+                        <Avatar src={review.avatar} />
+                      ) : (
+                        <Avatar>{review.tenNguoiBinhLuan?.charAt(0)}</Avatar>
+                      )
+                    }
+                    title={
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {review.tenNguoiBinhLuan}
+                        </span>
+                        <Rate disabled value={review.saoBinhLuan} />
                       </div>
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
+                    }
+                    description={
+                      <div>
+                        <p
+                          className={`comment-content ${
+                            expanded ? "expanded" : ""
+                          }`}
+                        >
+                          {review.noiDung}
+                        </p>
+                        {isLong && (
+                          <button
+                            onClick={() => setExpanded(!expanded)}
+                            className="text-blue-500 hover:underline text-sm mt-1"
+                          >
+                            {expanded ? "Ẩn bớt" : "Xem thêm"}
+                          </button>
+                        )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          {formatDate(review.ngayBinhLuan)}
+                        </div>
+                      </div>
+                    }
+                  />
+                </List.Item>
+              );
+            }}
           />
         )}
 
-        {hasMore && (
+        {/* {hasMore && (
           <div className="text-center">
             <Button
               type="primary"
@@ -112,9 +135,7 @@ const RoomReviews = ({ roomId, user }) => {
               Xem thêm bình luận
             </Button>
           </div>
-        )}
-
-        
+        )} */}
       </div>
     </div>
   );
