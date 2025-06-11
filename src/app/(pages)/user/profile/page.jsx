@@ -246,12 +246,10 @@ const UserProfile = () => {
   const { avatar, name, email, phone, birthday, gender } = userProfile;
 
   return (
-    <div className="flex gap-6 max-w-6xl mx-auto p-5">
-      {/* Thông tin người dùng - 40% */}
-      <div className="w-[40%]">
+    <div className="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto p-5">
+      <div className="w-full md:w-[40%]">
         <Card title="Thông tin hồ sơ" variant={false} className="shadow-lg">
-          <div className="flex justify-between items-start mb-4">
-            {/* Avatar, Upload, Tên */}
+          <div className="flex flex-col gap-4 mb-4">
             <div className="flex flex-col items-center">
               <Avatar
                 size={80}
@@ -266,27 +264,25 @@ const UserProfile = () => {
                   refreshProfile={refreshProfile}
                 />
               </div>
-              <h2 className="text-lg font-semibold">
-                {name || "Chưa cung cấp"}
-              </h2>
             </div>
-            {/* Nút Cập nhật và Xóa */}
-            <div className="flex flex-col gap-2">
-              <Button
-                className="bg-green-600 text-white font-medium h-9 rounded-full"
-                onClick={handleOpenUpdateModal}
-              >
-                Cập nhật tài khoản
-              </Button>
-              <Button
-                type="primary"
-                danger
-                className="font-medium h-9 rounded-full"
-                loading={deleting}
-                onClick={handleDeleteAccount}
-              >
-                Xóa tài khoản
-              </Button>
+            <div className="flex justify-center items-center">
+              <div className="flex flex-row gap-2">
+                <Button
+                  className="bg-green-600 text-white font-medium h-9 rounded-full"
+                  onClick={handleOpenUpdateModal}
+                >
+                  Cập nhật
+                </Button>
+                <Button
+                  type="primary"
+                  danger
+                  className="font-medium h-9 rounded-full"
+                  loading={deleting}
+                  onClick={handleDeleteAccount}
+                >
+                  Xóa
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -310,13 +306,14 @@ const UserProfile = () => {
         </Card>
       </div>
 
-      {/* Lịch sử đặt phòng - 60% */}
       {userBookings.length > 0 && (
-        <div className="w-[60%] max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-white scrollbar-thumb-rounded">
+        <div className="w-full md:w-[60%] border border-gray-300 rounded-lg shadow-lg">
+          <h3 className="text-lg font-bold p-4 border-b border-gray-300">
+            Lịch sử đặt phòng
+          </h3>
           <Card
-            title="Lịch sử đặt phòng"
             variant={false}
-            className="shadow-lg"
+            className="max-h-[450px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-white scrollbar-thumb-rounded x-2"
           >
             {loadingRooms ? (
               <div className="text-center my-4">
