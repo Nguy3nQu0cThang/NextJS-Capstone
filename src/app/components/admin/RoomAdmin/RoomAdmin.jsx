@@ -18,7 +18,6 @@ import {
   faWaterLadder,
   faSnowflake,
 } from "@fortawesome/free-solid-svg-icons";
-
 import {
   deleteRoomById,
   getAllRoomsDashboard,
@@ -30,6 +29,7 @@ import AddRoomModal from "./form/AddRoomModal";
 
 const RoomAdmin = () => {
   const { isLoggedIn, userProfile } = useAuth();
+
   const [rooms, setRooms] = useState([]);
   const [allLocations, setAllLocations] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -41,218 +41,69 @@ const RoomAdmin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
+  // Responsive check
   useEffect(() => {
     const checkScreenSize = () => {
       setIsSmallScreen(window.innerWidth < 768);
     };
-
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  // Fetch location + room data
   useEffect(() => {
-    const fetchAllLocationsData = async () => {
+    const fetchData = async () => {
+      if (!isLoggedIn || userProfile?.role !== "ADMIN") {
+        message.error("Bạn cần đăng nhập với quyền ADMIN để quản lý phòng.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await getAllLocations();
-        if (res?.content && Array.isArray(res.content)) {
-          setAllLocations(res.content);
-        } else {
-          console.error("Location data is not in expected format:", res);
-        }
+        setLoading(true);
+        const [roomRes, locationRes] = await Promise.all([
+          getAllRoomsDashboard(),
+          getAllLocations(),
+        ]);
+
+        const locationList = Array.isArray(locationRes.content)
+          ? locationRes.content
+          : [];
+
+        setAllLocations(locationList);
+
+        const roomsWithLocation = roomRes.map((room) => {
+          const loc = locationList.find((l) => l.id === room.maViTri);
+          return {
+            ...room,
+            viTriDetail: loc || null,
+          };
+        });
+
+        setRooms(roomsWithLocation);
       } catch (err) {
-        message.error(
-          "Failed to load locations. Please check connection or permissions."
-        );
-        console.error("Error fetching locations:", err);
+        console.error(err);
+        message.error("Không thể tải dữ liệu phòng hoặc vị trí.");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchAllLocationsData();
-  }, []);
 
-  const fetchRoomsData = async () => {
-    if (!isLoggedIn || userProfile?.role !== "ADMIN") {
-      message.error("You need to be logged in as an admin to manage rooms.");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const fetchedRooms = await getAllRoomsDashboard();
-      setRooms(fetchedRooms || []);
-    } catch (err) {
-      message.error("Failed to fetch room list. Please try again.");
-      console.error("Error fetching rooms:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRoomsData();
+    fetchData();
   }, [isLoggedIn, userProfile]);
 
-  useEffect(() => {
-    if (rooms.length > 0 && allLocations.length > 0) {
-      const roomsWithLocationDetails = rooms.map((room) => {
-        const foundLocation = allLocations.find(
-          (loc) => loc.id === room.maViTri
-        );
-        return {
-          ...room,
-          viTriDetail: foundLocation || null,
-        };
-      });
-      setRooms(roomsWithLocationDetails);
-    }
-  }, [rooms.length, allLocations.length]);
-
-  const filteredRooms = rooms.filter((room) =>
-    room.tenPhong.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const truncateDescription = (text) => {
-    if (text && text.length > 50) return text.substring(0, 50) + "...";
-    return text || "";
-  };
-
-  const columns = [
-    { title: "ID", dataIndex: "id", key: "id", responsive: ["md"], width: 50 },
-    {
-      title: "Hình ảnh",
-      dataIndex: "hinhAnh",
-      key: "image",
-      render: (text) => (
-        <Image
-          src={text}
-          alt="phòng"
-          className="w-20 h-auto object-cover rounded-md"
-          fallback="https://via.placeholder.com/100?text=Image+Not+Found"
-        />
-      ),
-      width: 120,
-    },
-    { title: "Tên phòng", dataIndex: "tenPhong", key: "tenPhong", width: 150 },
-    {
-      title: "Vị trí",
-      dataIndex: "viTriDetail",
-      key: "viTri",
-      render: (viTriDetail) => {
-        if (viTriDetail) {
-          const parts = [];
-          if (viTriDetail.tenViTri) parts.push(viTriDetail.tenViTri);
-          if (viTriDetail.tinhThanh) parts.push(viTriDetail.tinhThanh);
-          if (viTriDetail.quocGia) parts.push(viTriDetail.quocGia);
-          return parts.join(", ") || "N/A";
-        }
-        return "N/A";
-      },
-      width: 150,
-      responsive: ["md"],
-    },
-    {
-      title: "Chi tiết",
-      key: "details",
-      render: (_, record) => (
-        <div className="flex flex-col gap-1 text-xs sm:text-sm">
-          <div>
-            <FontAwesomeIcon
-              icon={faUser}
-              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
-            />
-            <span className="font-medium">{record.khach}</span> khách
-          </div>
-          <div>
-            <FontAwesomeIcon
-              icon={faBed}
-              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
-            />
-            <span className="font-medium">{record.phongNgu}</span>{" "}
-            {isSmallScreen ? "PN" : "Phòng ngủ"}
-          </div>
-          <div>
-            <FontAwesomeIcon
-              icon={faBed}
-              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
-            />
-            <span className="font-medium">{record.giuong}</span> giường
-          </div>
-          <div>
-            <FontAwesomeIcon
-              icon={faBath}
-              style={{ color: "#3b82f6", marginRight: "0.5rem" }}
-            />
-            <span className="font-medium">{record.phongTam}</span>{" "}
-            {isSmallScreen ? "PT" : "Phòng tắm"}
-          </div>
-        </div>
-      ),
-      width: 150,
-      responsive: ["sm"],
-    },
-    {
-      title: "Giá",
-      dataIndex: "giaTien",
-      key: "giaTien",
-      render: (text) => `${text} $ / đêm`,
-      width: 120,
-      responsive: ["sm"],
-    },
-    {
-      title: "Mô tả",
-      dataIndex: "moTa",
-      key: "moTa",
-      render: (text) => truncateDescription(text),
-      width: 200,
-      responsive: ["lg"],
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <Button
-            type="primary"
-            onClick={(e) => handleEdit(e, record)}
-            className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1"
-            style={{ marginRight: "5px" }}
-          >
-            Sửa
-          </Button>
-          <Button
-            danger
-            onClick={(e) => handleDelete(e, record)}
-            className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1"
-          >
-            Xóa
-          </Button>
-        </div>
-      ),
-      width: 150,
-    },
-  ];
-
-  const showDetailModal = (record) => {
-    setSelectedRoom(record);
-    setIsDetailModalVisible(true);
-  };
-
-  const handleAdd = () => {
-    setIsAddModalVisible(true);
-  };
-
+  const handleAdd = () => setIsAddModalVisible(true);
   const handleEdit = (e, record) => {
     e.stopPropagation();
     setEditingRoom(record);
     setIsEditModalVisible(true);
   };
 
-  const handleDelete = async (e, record) => {
+  const handleDelete = (e, record) => {
     e.stopPropagation();
     Modal.confirm({
-      title: `Bạn có chắc chắn muốn xóa phòng "${record.tenPhong}" không?`,
+      title: `Xóa phòng "${record.tenPhong}"?`,
       content: "Hành động này không thể hoàn tác.",
       okText: "Xóa",
       okType: "danger",
@@ -261,29 +112,21 @@ const RoomAdmin = () => {
         try {
           await deleteRoomById(record.id);
           message.success(`Đã xóa phòng "${record.tenPhong}" thành công!`);
-          fetchRoomsData();
-        } catch (error) {
-          message.error("Xóa phòng thất bại. Vui lòng thử lại.");
-          console.error(
-            "Lỗi xóa phòng:",
-            error.response?.data || error.message
-          );
+          // Reload room list
+          const roomRes = await getAllRoomsDashboard();
+          const updatedRooms = roomRes.map((room) => {
+            const loc = allLocations.find((l) => l.id === room.maViTri);
+            return { ...room, viTriDetail: loc || null };
+          });
+          setRooms(updatedRooms);
+        } catch (err) {
+          message.error("Xóa phòng thất bại.");
         }
       },
       onCancel() {
-        message.info("Đã hủy thao tác xóa.");
+        message.info("Đã hủy xóa.");
       },
     });
-  };
-
-  const handleAddSuccess = () => {
-    fetchRoomsData();
-    handleCancel();
-  };
-
-  const handleEditSuccess = () => {
-    fetchRoomsData();
-    handleCancel();
   };
 
   const handleCancel = () => {
@@ -292,6 +135,43 @@ const RoomAdmin = () => {
     setIsEditModalVisible(false);
     setSelectedRoom(null);
     setEditingRoom(null);
+  };
+
+  const handleAddSuccess = () => {
+    handleCancel();
+    message.success("Thêm phòng thành công!");
+    fetchLatestRooms();
+  };
+
+  const handleEditSuccess = () => {
+    handleCancel();
+    message.success("Cập nhật phòng thành công!");
+    fetchLatestRooms();
+  };
+
+  const fetchLatestRooms = async () => {
+    try {
+      const roomRes = await getAllRoomsDashboard();
+      const updatedRooms = roomRes.map((room) => {
+        const loc = allLocations.find((l) => l.id === room.maViTri);
+        return { ...room, viTriDetail: loc || null };
+      });
+      setRooms(updatedRooms);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const filteredRooms = rooms.filter((room) =>
+    room.tenPhong.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const truncateDescription = (text) =>
+    text?.length > 50 ? text.substring(0, 50) + "..." : text || "";
+
+  const showDetailModal = (record) => {
+    setSelectedRoom(record);
+    setIsDetailModalVisible(true);
   };
 
   const amenitiesList = [
@@ -308,110 +188,190 @@ const RoomAdmin = () => {
     { key: "bonTam", label: "Bồn tắm", icon: faBath },
   ];
 
-  return (
-    <div className="p-2 sm:p-4 bg-gray-100 min-h-screen">
-      <div className="admin-users-table-container">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-          Quản lý phòng
-        </h2>
-        <div className="admin-users-search-bar">
-          <div className="admin-user-input">
-            <Input
-              placeholder="Tìm kiếm..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<span className="text-gray-400">🔍</span>}
-            />
+  const columns = [
+    { title: "ID", dataIndex: "id", key: "id", responsive: ["md"], width: 50 },
+    {
+      title: "Hình ảnh",
+      dataIndex: "hinhAnh",
+      key: "image",
+      render: (text) => (
+        <Image
+          src={text}
+          alt="phòng"
+          className="w-20 h-auto object-cover rounded-md"
+          fallback="https://via.placeholder.com/100?text=Image+Not+Found"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      width: 120,
+    },
+    { title: "Tên phòng", dataIndex: "tenPhong", key: "tenPhong", width: 150 },
+    {
+      title: "Vị trí",
+      dataIndex: "viTriDetail",
+      key: "viTri",
+      render: (viTriDetail) => {
+        const parts = [
+          viTriDetail?.tenViTri,
+          viTriDetail?.tinhThanh,
+          viTriDetail?.quocGia,
+        ].filter(Boolean);
+        return parts.join(", ") || "N/A";
+      },
+      responsive: ["md"],
+      width: 150,
+    },
+    {
+      title: "Chi tiết",
+      key: "details",
+      render: (_, record) => (
+        <div className="flex flex-col gap-1 text-xs sm:text-sm">
+          <div>
+            <FontAwesomeIcon icon={faUser} className="mr-2 text-blue-500" />
+            {record.khach} khách
           </div>
+          <div>
+            <FontAwesomeIcon icon={faBed} className="mr-2 text-blue-500" />
+            {record.phongNgu} {isSmallScreen ? "PN" : "Phòng ngủ"}
+          </div>
+          <div>
+            <FontAwesomeIcon icon={faBed} className="mr-2 text-blue-500" />
+            {record.giuong} giường
+          </div>
+          <div>
+            <FontAwesomeIcon icon={faBath} className="mr-2 text-blue-500" />
+            {record.phongTam} {isSmallScreen ? "PT" : "Phòng tắm"}
+          </div>
+        </div>
+      ),
+      responsive: ["sm"],
+      width: 150,
+    },
+    {
+      title: "Giá",
+      dataIndex: "giaTien",
+      key: "giaTien",
+      render: (text) => `${text} $ / đêm`,
+      responsive: ["sm"],
+      width: 120,
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "moTa",
+      key: "moTa",
+      render: truncateDescription,
+      responsive: ["lg"],
+      width: 200,
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_, record) => (
+        <div className="flex gap-2">
           <Button
             type="primary"
-            className="bg-green-500 hover:bg-green-600 text-white rounded-md flex-shrink-0"
-            onClick={handleAdd}
+            className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
+            onClick={(e) => handleEdit(e, record)}
           >
-            + Thêm phòng
+            Sửa
+          </Button>
+          <Button
+            danger
+            className="bg-red-500 hover:bg-red-600 text-white text-xs"
+            onClick={(e) => handleDelete(e, record)}
+          >
+            Xóa
           </Button>
         </div>
+      ),
+      width: 150,
+    },
+  ];
+
+  return (
+    <div className="p-2 sm:p-4 bg-gray-100 min-h-screen">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
+        Quản lý phòng
+      </h2>
+      <div className="flex gap-2 mb-4 flex-col sm:flex-row items-start sm:items-center">
+        <Input
+          placeholder="Tìm kiếm..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          prefix={<span className="text-gray-400">🔍</span>}
+        />
+        <Button
+          type="primary"
+          className="bg-green-500 hover:bg-green-600 text-white"
+          onClick={handleAdd}
+        >
+          + Thêm phòng
+        </Button>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table
-          rowKey="id"
-          dataSource={filteredRooms}
-          columns={columns}
-          onRow={(record) => ({
-            onClick: () => showDetailModal(record),
-          })}
-          pagination={{ pageSize: 5 }}
-          loading={loading}
-          className="bg-white shadow-md rounded-md"
-          scroll={{ x: "max-content" }}
-        />
-      </div>
+      <Table
+        rowKey="id"
+        dataSource={filteredRooms}
+        columns={columns}
+        pagination={{ pageSize: 5 }}
+        loading={loading}
+        onRow={(record) => ({
+          onClick: () => showDetailModal(record),
+        })}
+        className="bg-white shadow-md rounded-md"
+        scroll={{ x: "max-content" }}
+      />
 
       <Modal
         title={selectedRoom?.tenPhong}
         open={isDetailModalVisible}
         onCancel={handleCancel}
         footer={null}
-        width={window.innerWidth < 768 ? "90%" : 600}
-        className="rounded-lg"
+        width={isSmallScreen ? "90%" : 600}
       >
         {selectedRoom && (
-          <div>
+          <>
             <Image
               src={selectedRoom.hinhAnh}
               alt="room"
-              className="w-full h-48 sm:h-64 object-cover rounded-t-lg"
+              className="w-full h-48 sm:h-64 object-cover"
               fallback="https://via.placeholder.com/600x400?text=Image+Not+Found"
             />
-            <div className="p-3 sm:p-4">
-              <p className="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base">
-                {selectedRoom.moTa}
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-sm sm:text-base mb-4">
+            <div className="p-4">
+              <p className="mb-3 text-gray-700">{selectedRoom.moTa}</p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 <div>
-                  <span className="font-semibold">Khách:</span>{" "}
-                  {selectedRoom.khach}
+                  <strong>Khách:</strong> {selectedRoom.khach}
                 </div>
                 <div>
-                  <span className="font-semibold">Phòng ngủ:</span>{" "}
-                  {selectedRoom.phongNgu}
+                  <strong>Phòng ngủ:</strong> {selectedRoom.phongNgu}
                 </div>
                 <div>
-                  <span className="font-semibold">Giường:</span>{" "}
-                  {selectedRoom.giuong}
+                  <strong>Giường:</strong> {selectedRoom.giuong}
                 </div>
                 <div>
-                  <span className="font-semibold">Phòng tắm:</span>{" "}
-                  {selectedRoom.phongTam}
+                  <strong>Phòng tắm:</strong> {selectedRoom.phongTam}
                 </div>
                 <div className="col-span-2">
-                  <span className="font-semibold">Giá:</span> $
-                  {selectedRoom.giaTien} / đêm
+                  <strong>Giá:</strong> ${selectedRoom.giaTien} / đêm
                 </div>
               </div>
-
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
-                Tiện nghi
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm sm:text-base">
-                {amenitiesList.map((amenity) => {
-                  if (selectedRoom[amenity.key]) {
-                    return (
-                      <div key={amenity.key} className="flex items-center">
-                        <FontAwesomeIcon
-                          icon={amenity.icon}
-                          style={{ color: "#3b82f6", marginRight: "0.5rem" }}
-                        />
-                        <span>{amenity.label}</span>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
+              <h3 className="text-lg font-semibold mb-2">Tiện nghi</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {amenitiesList.map(({ key, label, icon }) =>
+                  selectedRoom[key] ? (
+                    <div key={key} className="flex items-center">
+                      <FontAwesomeIcon
+                        icon={icon}
+                        className="mr-2 text-blue-500"
+                      />
+                      {label}
+                    </div>
+                  ) : null
+                )}
               </div>
             </div>
-          </div>
+          </>
         )}
       </Modal>
 
